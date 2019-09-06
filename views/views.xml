@@ -7,7 +7,7 @@
       <field name="name">financiera.pagos.360.cuenta tree</field>
       <field name="model">financiera.pagos.360.cuenta</field>
       <field name="arch" type="xml">
-        <tree>
+        <tree create="false" delete="false">
           <field name="name"/>
           <field name="available_balance"/>
           <field name="unavailable_balance"/>
@@ -20,7 +20,7 @@
       <field name="name">financiera.pagos.360.cuenta form</field>
       <field name="model">financiera.pagos.360.cuenta</field>
       <field name="arch" type="xml">
-        <form>
+        <form create="false" delete="false">
           <header>
             <button name="button_test" string="Obtener Saldo Test" type="object" class="oe_highlight"/>
           </header>
@@ -36,6 +36,7 @@
               <group string="Opciones Solicitudes de Pago">
                 <field name="expire_create_new"/>
                 <field name="expire_days_payment"/>
+                <field name="expire_max_count_create"/>
               </group>
             </group>
           </sheet>
