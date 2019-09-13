@@ -8,8 +8,9 @@
       <field name="model">res.company</field>
       <field name="inherit_id" ref="financiera_prestamos.company_form_inherited"/>
       <field name="arch" type="xml">
-        <xpath expr="//field[@name='configuracion_id']" position="after">
-          <field name="pagos_360_id"/>
+        <xpath expr="//field[@name='pago_voluntario_entidad']" position="after">
+          <field name="pagos_360"/>
+          <field name="pagos_360_id" attrs="{'invisible': [('pagos_360', '=', False)], 'required': [('pagos_360', '=', True)]}"/>
         </xpath>
       </field>
     </record>

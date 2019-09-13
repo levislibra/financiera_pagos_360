@@ -72,7 +72,6 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 
 	@api.one
 	def pagos_360_crear_solicitud(self):
-		rec = super(FinancieraPagos360Solicitud, self).create(values)
 		conn = http.client.HTTPSConnection("api.pagos360.com")
 		# payload = "{\"payment_request\":{\"description\":\"concepto_del_pago\",\"first_due_date\":\"25-01-2020\",\"first_total\":200.99,\"payer_name\":\"nombre_pagador\"}}"
 		payload = {
@@ -126,9 +125,16 @@ class ExtendsFinancieraPrestamo(models.Model):
 	_inherit = 'financiera.prestamo' 
 	_name = 'financiera.prestamo'
 
-	@api.one
-	def enviar_a_acreditacion_pendiente(self):
-		rec = super(ExtendsFinancieraPrestamo, self).enviar_a_acreditacion_pendiente()
+	pagos_360 = fields.Boolean('Pagos360 - Pago voluntario', compute='_compute_pagos_360')
+	pagos360_pago_voluntario = fields.Boolean('Pagos360 - Pago Voluntario')
 
-		for cuota_id in self.cuota_ids:
-			cuota_id.pagos_360_crear_solicitud()
+	@api.one
+	def _compute_pagos_360(self):
+		self.pagos_360 = self.env.user.company_id.pagos_360
+
+	# @api.one
+	# def enviar_a_acreditacion_pendiente(self):
+	# 	rec = super(ExtendsFinancieraPrestamo, self).enviar_a_acreditacion_pendiente()
+
+	# 	for cuota_id in self.cuota_ids:
+	# 		cuota_id.pagos_360_crear_solicitud()

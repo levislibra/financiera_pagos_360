@@ -54,6 +54,21 @@
         (0, 0, {'view_mode': 'form', 'view_id': ref('cuenta_form')})]"/>
     </record>
 
+    <!-- Prestamo inherit -->
+
+    <record id="prestamo_form_inherited"  model="ir.ui.view">
+      <field name="name">Extension Prestamo Form</field>
+      <field name="model">financiera.prestamo</field>
+      <field name="inherit_id" ref="financiera_prestamos.financiera_prestamo_form"/>
+      <field name="arch" type="xml">        
+        <xpath expr="//field[@name='pago_voluntario_entidad']" position='after'>
+          <field name="pagos_360" invisible="1"/>
+          <field name="pagos360_pago_voluntario" attrs="{'readonly': [('pagos_360', '=', False)]}"/>
+        </xpath>
+      </field>
+    </record>
+
+
     <!-- Top menu item -->
     
     <menuitem name="Pagos 360" id="menu_pagos_360" web_icon="financiera_pagos_360,static/description/icon.png"/>
