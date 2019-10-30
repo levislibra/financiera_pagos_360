@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Custom report-->
+<openerp>
+<data>
+
+    <report 
+        id="prestamo_cupon_de_pago_report"
+        model="financiera.prestamo"
+        string="Cupon de Pago Generico"
+        report_type="qweb-pdf"
+        name="financiera_pagos_360.cupon_de_pago_report_view"
+        attachment_use="True"
+        file="financiera_pagos_360.cupon_de_pago_report_view"
+    />
+
+    <template id="cupon_de_pago_report_view">
+        <t t-call="report.external_layout">
+            <t t-foreach="docs" t-as="o">
+                <div class="page" style="font-size:16px;">
+                    <div align="center" style="font-size:16px;">
+                        <b>Cupones de pago</b>
+                    </div>
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Titular del Prestamo</th>
+                                <th>Identificación principal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="invoice_tbody">
+                            <tr>
+                                <td><span t-field="o.partner_id.name"/></td>
+                                <td><span t-field="o.partner_id.main_id_category_id"/> - <span t-field="o.partner_id.main_id_number"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th style="width:5%;">Cuota</th>
+                                <th style="width:40%;"></th>
+                                <th style="width:55%;">Codigo de barras</th>
+                            </tr>
+                        </thead>
+                        <tbody class="invoice_tbody">
+                            <tr t-foreach="o.cuota_ids" t-as="l">
+                                <td style="width:15%;"><span t-field="l.numero_cuota"/></td>
+                                <td style="width:15%;">
+                                    <table class="table table-hover o_my_status_table">
+                                        <tbody class="invoice_tbody" style="font-size:12px;">
+                                            <tr>
+                                                <td>Primer Vencimiento</td>
+                                                <td><span t-field="l.pagos_360_first_due_date"/></td>
+                                                <td>$<span t-field="l.pagos_360_first_total"/></td>
+                                            </tr>
+                                            <span t-if="l.pagos_360_second_due_date">
+                                                <tr>
+                                                    <td>Segundo Vencimiento</td>
+                                                    <td><span t-field="l.pagos_360_second_due_date"/></td>
+                                                    <td>$<span t-field="l.pagos_360_second_total"/></td>
+                                                </tr>
+                                            </span>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td style="width:15%;"><img t-att-src="l.pagos_360_barcode_url" /><br/><span t-field="l.pagos_360_barcode"/></td>
+                            </tr>
+                            <tr>
+                                <td style="width:15%;"></td>
+                                <td style="width:15%;"></td>
+                                <td style="width:15%;"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</data>
+</openerp>

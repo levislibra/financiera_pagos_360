@@ -69,10 +69,39 @@
     </record>
 
 
+    <!-- Cuota inherit -->
+
+    <record id="cuota_form_inherited"  model="ir.ui.view">
+      <field name="name">Extension Prestamo Cuota Form</field>
+      <field name="model">financiera.prestamo.cuota</field>
+      <field name="inherit_id" ref="financiera_prestamos.financiera_prestamo_cuota_form"/>
+      <field name="arch" type="xml">        
+        <xpath expr="//page[4]" position='after'>
+          <page string="Pagos 360" attrs="{'invisible': [('pagos_360_generar_pago_voluntario', '=', False)]}">
+            <group>
+              <field name="pagos_360_generar_pago_voluntario" readonly="1"/>
+              <field name="pagos_360_solicitud_id" readonly="1"/>
+              <field name="pagos_360_solicitud_state" readonly="1"/>
+              <field name="pagos_360_first_due_date" readonly="1"/>
+              <field name="pagos_360_first_total" readonly="1"/>
+              <field name="pagos_360_second_due_date" readonly="1"/>
+              <field name="pagos_360_second_total" readonly="1"/>
+              <field name="pagos_360_barcode" readonly="1"/>
+              <field name="pagos_360_checkout_url" widget="url" readonly="1"/>
+              <field name="pagos_360_barcode_url" widget="url" readonly="1"/>
+              <field name="pagos_360_pdf_url" widget="url" readonly="1"/>
+              <!-- <field name="pagos360_pago_voluntario" readonly="1"/>
+              <field name="pagos360_pago_voluntario" readonly="1"/> -->
+            </group>
+          </page>
+        </xpath>
+      </field>
+    </record>
+
+
     <!-- Top menu item -->
     
-    <menuitem name="Pagos 360" id="menu_pagos_360" web_icon="financiera_pagos_360,static/description/icon.png"/>
-    <!-- groups="financiera_bna_debito_automatico.user" -->
+    <menuitem name="Pagos 360" id="menu_pagos_360" web_icon="financiera_pagos_360,static/description/icon.png" groups="financiera_pagos_360.manager"/>
 
     <menuitem name="Cuenta" id="menu_cuenta_action" parent="menu_pagos_360" action="cuenta_action" sequence="0"/>
 

@@ -1,2 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_financiera_pagos_360_financiera_pagos_360,financiera_pagos_360.financiera_pagos_360,model_financiera_pagos_360_financiera_pagos_360,,1,0,0,0
+
+user_financiera_pagos_360,financiera.pagos.360.cuenta,model_financiera_pagos_360_cuenta,financiera_pagos_360.user,1,0,0,0
+manager_financiera_pagos_360,financiera.pagos.360.cuenta,model_financiera_pagos_360_cuenta,financiera_pagos_360.manager,1,1,1,1

@@ -34,39 +34,68 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	_name = 'financiera.prestamo.cuota'
 
 	pagos_360_generar_pago_voluntario = fields.Boolean('Pagos360 - Generar cupon de pago voluntario')
-	pagos_360_solicitud_id = fields.Integer("ID de la solicitud")
+	pagos_360_solicitud_id = fields.Integer('ID de la solicitud')
 	pagos_360_solicitud_state = fields.Selection([
 			('pending', 'Pendiente'), ('paid', 'Pagada'),
 			('expired', 'Expirada'), ('reverted', 'Revertida')],
 			string='Estado', readonly=True, default='pending')
+	pagos_360_first_due_date = fields.Date('Primer Vencimiento')
+	pagos_360_first_total = fields.Float('Importe', digits=(16,2))
+	pagos_360_second_due_date = fields.Date('Segundo Vencimiento')
+	pagos_360_second_total = fields.Float('Importe', digits=(16,2))
+	pagos_360_barcode = fields.Char('Barcode')
+	pagos_360_checkout_url = fields.Char('Url de pago online')
+	pagos_360_barcode_url = fields.Char('Url imagen del codigo de barras')
+	pagos_360_pdf_url = fields.Char('Url de cupon de pago en pdf')
+
+	@api.model
+	def compute_cuota(self):
+		super(ExtendsFinancieraPrestamoCuota, self).compute_cuota()
+		print("POR CREAR SOLICITUDDDD")
+		print(self)
+		if self.prestamo_id.pagos360_pago_voluntario:
+			self.pagos_360_crear_solicitud()
 
 	@api.one
 	def pagos_360_crear_solicitud(self):
 		conn = httplib.HTTPSConnection("api.pagos360.com")
 		pagos_360_id = self.env.user.company_id.pagos_360_id
+		payload = ""
+		# primer vencimiento
 		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d")
 		if fecha_vencimiento < datetime.now():
 			if pagos_360_id.expire_days_payment <= 0:
 				raise ValidationError("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
 			else:
 				fecha_vencimiento = datetime.now() + timedelta(days=+pagos_360_id.expire_days_payment)
-		print("Fecha fecha_vencimiento:: "+str(fecha_vencimiento))
 		fecha_vencimiento = str(fecha_vencimiento.day).zfill(2)+"-"+str(fecha_vencimiento.month).zfill(2)+"-"+str(fecha_vencimiento.year)
-		payload = """{\
-			"payment_request":{\
-				"description":"%s",\
-				"payer_name": "%s",\
-				"first_due_date": "%s",\
-				"first_total": %s\
-			}\
-		}""" % (self.name, self.partner_id.name, fecha_vencimiento, self.total)
-		# "second_due_date": "%s",\
-		# "second_total": %s\
-		# , self.segunda_fecha_vencimiento, self.total_segunda_fecha
-
-		print("********************************")
-		print(payload)
-		print("-----------------------------")
+		# segundo vencimiento
+		if self.segunda_fecha_vencimiento != False:
+			segunda_fecha_vencimiento = datetime.strptime(self.segunda_fecha_vencimiento, "%Y-%m-%d")
+		if  self.segunda_fecha_vencimiento != False and segunda_fecha_vencimiento >= datetime.now() and self.total_segunda_fecha > self.total:
+			segunda_fecha_vencimiento = str(segunda_fecha_vencimiento.day).zfill(2)+"-"+str(segunda_fecha_vencimiento.month).zfill(2)+"-"+str(segunda_fecha_vencimiento.year)
+			payload = """{\
+				"payment_request":{\
+					"description":"%s",\
+					"external_reference":"%s",\
+					"payer_name": "%s",\
+					"first_due_date": "%s",\
+					"first_total": %s,\
+					"second_due_date": "%s",\
+					"second_total": %s\
+				}\
+			}""" % (self.name, self.id, self.partner_id.name, fecha_vencimiento, self.total, segunda_fecha_vencimiento, self.total_segunda_fecha)
+		else:
+			payload = """{\
+				"payment_request":{\
+					"description":"%s",\
+					"external_reference":"%s",\
+					"payer_name": "%s",\
+					"first_due_date": "%s",\
+					"first_total": %s\
+				}\
+			}""" % (self.name, self.id, self.partner_id.name, fecha_vencimiento, self.total)
+		self.pagos_360_generar_pago_voluntario = True
 		headers = {
 			'content-type': "application/json",
 			'authorization': "Bearer " + pagos_360_id.api_key,
@@ -74,10 +103,33 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		conn.request("POST", "/payment-request", payload, headers)
 		res = conn.getresponse()
 		data = json.loads(res.read().decode("utf-8"))
-		print(data)
-		print(data['id'])
-		self.pagos_360_solicitud_id = data['id']
-		self.pagos_360_solicitud_state = data['state']
+		self.procesar_respuesta(data)
+
+	@api.one
+	def procesar_respuesta(self, data):
+		if 'error' in data.keys():
+			raise ValidationError(data['error']['message'])
+		if 'id' in data.keys():
+			self.pagos_360_solicitud_id = data['id']
+		if 'state' in data.keys():
+			self.pagos_360_state = data['state']
+		if 'first_due_date' in data.keys():
+			self.pagos_360_first_due_date = data['first_due_date']
+		if 'first_total' in data.keys():
+			self.pagos_360_first_total = data['first_total']
+		if 'second_due_date' in data.keys():
+			self.pagos_360_second_due_date = data['second_due_date']
+		if 'second_total' in data.keys():
+			self.pagos_360_second_total = data['second_total']
+		if 'barcode' in data.keys():
+			self.pagos_360_barcode = data['barcode']
+		if 'checkout_url' in data.keys():
+			self.pagos_360_checkout_url = data['checkout_url']
+		if 'barcode_url' in data.keys():
+			self.pagos_360_barcode_url = data['barcode_url']
+		if 'pdf_url' in data.keys():
+			self.pagos_360_pdf_url = data['pdf_url']
+
 
 	@api.one
 	def pagos_360_renovar_solicitud(self):
@@ -119,8 +171,10 @@ class ExtendsFinancieraPrestamo(models.Model):
 		self.pagos_360 = self.env.user.company_id.pagos_360
 
 	# @api.one
-	# def enviar_a_acreditacion_pendiente(self):
-	# 	rec = super(ExtendsFinancieraPrestamo, self).enviar_a_acreditacion_pendiente()
-
-	# 	for cuota_id in self.cuota_ids:
-	# 		cuota_id.pagos_360_crear_solicitud()
+	# def calcular_cuotas_plan(self):
+	# 	rec = super(ExtendsFinancieraPrestamo, self).calcular_cuotas_plan()
+	# 	print("RECCCCCCCCC")
+	# 	print(rec)
+	# 	if rec.pagos360_pago_voluntario:
+	# 		for cuota_id in rec.cuota_ids:
+	# 			cuota_id.pagos_360_crear_solicitud()
