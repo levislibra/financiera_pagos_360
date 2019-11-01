@@ -30,6 +30,7 @@
         'views/views.xml',
         'views/extends_res_company.xml',
         'views/generic_reports.xml',
+        'data/ir_cron.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

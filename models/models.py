@@ -51,10 +51,34 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	@api.model
 	def compute_cuota(self):
 		super(ExtendsFinancieraPrestamoCuota, self).compute_cuota()
-		print("POR CREAR SOLICITUDDDD")
-		print(self)
 		if self.prestamo_id.pagos360_pago_voluntario:
 			self.pagos_360_crear_solicitud()
+
+	@api.model
+	def _actualizar_cobros_360(self):
+		cr = self.env.cr
+		uid = self.env.uid
+		cuotas_obj = self.pool.get('financiera.prestamo.cuota')
+		cuotas_ids = cuotas_obj.search(cr, uid, [
+			('pagos_360_generar_pago_voluntario', '=', True),
+			('state', 'in', ('activa', 'judicial', 'incobrable')),
+			('pagos_360_solicitud_state', 'in', ('pending', 'paid')),
+		])
+		_logger.info('Chequear cobro voluntario por medio de pagos360')
+		count = 0
+		for _id in cuotas_ids:
+			cuota_id = cuotas_obj.browse(cr, uid, _id)
+			new_state = cuota_id.pagos_360_actualizar_estado()
+			if new_state == 'paid':
+				pass
+			elif new_state == 'expire':
+				pass
+			elif new_state == 'reverted':
+				# Marcar diario con posibilidad de cancelar pagos => asientos
+				pass
+			count += 1
+		_logger.info('Finalizo el chequeo: %s cuotas chequeadas', count)
+
 
 	@api.one
 	def pagos_360_crear_solicitud(self):
@@ -169,12 +193,3 @@ class ExtendsFinancieraPrestamo(models.Model):
 	@api.one
 	def _compute_pagos_360(self):
 		self.pagos_360 = self.env.user.company_id.pagos_360
-
-	# @api.one
-	# def calcular_cuotas_plan(self):
-	# 	rec = super(ExtendsFinancieraPrestamo, self).calcular_cuotas_plan()
-	# 	print("RECCCCCCCCC")
-	# 	print(rec)
-	# 	if rec.pagos360_pago_voluntario:
-	# 		for cuota_id in rec.cuota_ids:
-	# 			cuota_id.pagos_360_crear_solicitud()

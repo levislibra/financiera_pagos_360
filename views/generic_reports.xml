@@ -18,7 +18,9 @@
             <t t-foreach="docs" t-as="o">
                 <div class="page" style="font-size:16px;">
                     <div align="center" style="font-size:16px;">
-                        <b>Cupones de pago</b>
+                        <h1>Cupones de pago</h1>
+                        <p>Medios de pagos habilitados</p>
+                        <img t-att-src="'/financiera_pagos_360/static/description/logos_medios_de_pago.png'" align="center"/>
                     </div>
                     <table class="table table-hover table-striped">
                         <thead>
@@ -72,6 +74,10 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div align="center" style="font-size:16px;">
+                        <p>Medios de pagos habilitados</p>
+                        <img t-att-src="'/financiera_pagos_360/static/description/logos_medios_de_pago.png'" align="center"/>
+                    </div>
                 </div>
             </t>
         </t>
