@@ -27,21 +27,23 @@
                             <tr>
                                 <th>Titular del Prestamo</th>
                                 <th>Identificación principal</th>
+                                <th>Prestamo</th>
                             </tr>
                         </thead>
                         <tbody class="invoice_tbody">
                             <tr>
                                 <td><span t-field="o.partner_id.name"/></td>
                                 <td><span t-field="o.partner_id.main_id_category_id"/> - <span t-field="o.partner_id.main_id_number"/></td>
+                                <td><span t-field="o.name"/></td>
                             </tr>
                         </tbody>
                     </table>
                     <table class="table table-condensed">
                         <thead>
                             <tr>
-                                <th style="width:5%;">Cuota</th>
+                                <th style="width:5%;"></th>
                                 <th style="width:40%;"></th>
-                                <th style="width:55%;">Codigo de barras</th>
+                                <th style="width:55%;"></th>
                             </tr>
                         </thead>
                         <tbody class="invoice_tbody">
@@ -49,7 +51,22 @@
                                 <td style="width:15%;"><span t-field="l.numero_cuota"/></td>
                                 <td style="width:15%;">
                                     <table class="table table-hover o_my_status_table">
-                                        <tbody class="invoice_tbody" style="font-size:12px;">
+                                        <thead align="center">
+                                            <tr>
+                                                <td>CUPÓN DE PAGO</td>
+                                            </tr>
+                                            <tr>
+                                                <td><b><span t-field="l.partner_id"/></b></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Referencia: <b><span t-field="l.id"/></b></td>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </td>
+                                <td style="width:15%;">
+                                    <table class="table table-hover o_my_status_table">
+                                        <thead align="center">
                                             <tr>
                                                 <td>Primer Vencimiento</td>
                                                 <td><span t-field="l.pagos_360_first_due_date"/></td>
@@ -62,10 +79,17 @@
                                                     <td>$<span t-field="l.pagos_360_second_total"/></td>
                                                 </tr>
                                             </span>
+                                        </thead>
+                                        <tbody class="invoice_tbody" style="font-size:14px;">
+                                            <tr>
+                                                <td>
+                                                    <img t-att-src="l.pagos_360_barcode_url" /><br/>
+                                                    <span t-field="l.pagos_360_barcode"/>
+                                                </td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </td>
-                                <td style="width:15%;"><img t-att-src="l.pagos_360_barcode_url" /><br/><span t-field="l.pagos_360_barcode"/></td>
                             </tr>
                             <tr>
                                 <td style="width:15%;"></td>
