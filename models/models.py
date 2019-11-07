@@ -74,63 +74,70 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		for _id in cuotas_ids:
 			pagos_360_id = self.env.user.company_id.pagos_360_id
 			cuota_id = cuotas_obj.browse(cr, uid, _id)
-			old_state = cuota_id.pagos_360_solicitud_state
+			# old_state = cuota_id.pagos_360_solicitud_state
 			request_result = cuota_id.pagos_360_actualizar_estado()[0]
 			print("request_result :: ")
 			print(request_result)
-			new_state = cuota_id.pagos_360_solicitud_state
-			print("ESTADO ACTUALIZADO A:: "+str(new_state))
-			print("FUE ACTUALIZADO? "+str(old_state != new_state))
-			if old_state != new_state:
-				if new_state == 'paid':
-					payment_date = None
-					journal_id = self.company_id.pagos_360_id.journal_id
-					factura_electronica = self.company_id.pagos_360_id.factura_electronica
-					amount = 0
-					invoice_date = None
-					if request_result:
-						payment_date = request_result['paid_at']
-						amount = request_result['amount']
-						# Si se desea hacer factura electronica esto puede traer problemas
-						# dependiendo de la fecha de la utlima factura
-						# Posible solucion es usar un punto de venta exclusivo
-						invoice_date = request_result['paid_at']
-
-					partner_id = cuota_id.partner_id
-					fpcmc_values = {
-						'partner_id': partner_id.id,
-						'company_id': self.company_id.id,
-					}
-					multi_cobro_id = self.env['financiera.prestamo.cuota.multi.cobro'].create(fpcmc_values)
-					partner_id.multi_cobro_ids = [multi_cobro_id.id]
-					cuota_id.confirmar_cobrar_cuota(payment_date, journal_id, amount, multi_cobro_id)
-					# Facturacion cuota
-					if not cuota_id.facturada:
-						fpcmf_values = {
-							'invoice_type': 'interes',
-							'company_id': self.company_id.id,
-						}
-						multi_factura_id = self.env['financiera.prestamo.cuota.multi.factura'].create(fpcmf_values)
-						cuota_id.facturar_cuota(invoice_date, factura_electronica, multi_factura_id, multi_cobro_id)
-					if cuota_id.punitorio_a_facturar > 0:
-						fpcmf_values = {
-							'invoice_type': 'punitorio',
-							'company_id': self.company_id.id,
-						}
-						multi_factura_punitorio_id = self.env['financiera.prestamo.cuota.multi.factura'].create(fpcmf_values)
-						cuota_id.facturar_punitorio_cuota(punitorio_invoice_date, punitorio_factura_electronica, multi_factura_punitorio_id, multi_cobro_id)
-					if multi_factura_id.invoice_amount == 0:
-						multi_factura_id.unlink()
-					if multi_factura_punitorio_id.invoice_amount == 0:
-						multi_factura_punitorio_id.unlink()
-				elif new_state == 'expire':
-					self.pagos_360_renovar_solicitud()
-				elif new_state == 'reverted':
-					# Marcar diario con posibilidad de cancelar pagos => asientos
-					# No se puede revertir pagos por medios de cobro off line
-					pass
+			pagos_360_solicitud_state = cuota_id.pagos_360_solicitud_state
+			print("ESTADO ACTUALIZADO A:: "+str(pagos_360_solicitud_state))
+			# print("FUE ACTUALIZADO? "+str(old_state != pagos_360_solicitud_state))
+			# if old_state != pagos_360_solicitud_state:
+			if cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'paid':
+				payment_date = None
+				journal_id = self.company_id.pagos_360_id.journal_id
+				factura_electronica = self.company_id.pagos_360_id.factura_electronica
+				amount = 0
+				invoice_date = None
+				if request_result:
+					payment_date = request_result['paid_at']
+					amount = request_result['amount']
+					# Si se desea hacer factura electronica esto puede traer problemas
+					# dependiendo de la fecha de la utlima factura
+					# Posible solucion es usar un punto de venta exclusivo
+					invoice_date = request_result['paid_at']
+				cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, invoice_date)
+			elif cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'expire':
+				self.pagos_360_renovar_solicitud()
+			elif cuota_id.state == 'cobrada' and pagos_360_solicitud_state == 'reverted':
+				# Marcar diario con posibilidad de cancelar pagos => asientos
+				# No se puede revertir pagos por medios de cobro off line
+				pass
 			count += 1
 		_logger.info('Finalizo el chequeo: %s cuotas chequeadas', count)
+
+	@api.one
+	def pagos_360_cobrar_y_facturar(self, payment_date, journal_id, factura_electronica, amount, invoice_date):
+		# Cobro cuota
+		partner_id = self.partner_id
+		fpcmc_values = {
+			'partner_id': partner_id.id,
+			'company_id': self.company_id.id,
+		}
+		multi_cobro_id = self.env['financiera.prestamo.cuota.multi.cobro'].create(fpcmc_values)
+		partner_id.multi_cobro_ids = [multi_cobro_id.id]
+		self.punitorio_fecha_actual = payment_date
+		if self.saldo > 0:
+			self.confirmar_cobrar_cuota(payment_date, journal_id, amount, multi_cobro_id)
+		# Facturacion cuota
+		if not self.facturada:
+			fpcmf_values = {
+				'invoice_type': 'interes',
+				'company_id': self.company_id.id,
+			}
+			multi_factura_id = self.env['financiera.prestamo.cuota.multi.factura'].create(fpcmf_values)
+			self.facturar_cuota(invoice_date, factura_electronica, multi_factura_id, multi_cobro_id)
+		if self.punitorio_a_facturar > 0:
+			fpcmf_values = {
+				'invoice_type': 'punitorio',
+				'company_id': self.company_id.id,
+			}
+			multi_factura_punitorio_id = self.env['financiera.prestamo.cuota.multi.factura'].create(fpcmf_values)
+			self.facturar_punitorio_cuota(invoice_date, factura_electronica, multi_factura_punitorio_id, multi_cobro_id)
+		if multi_factura_id.invoice_amount == 0:
+			multi_factura_id.unlink()
+		if multi_factura_punitorio_id.invoice_amount == 0:
+			multi_factura_punitorio_id.unlink()
+
 
 	@api.one
 	def pagos_360_actualizar_estado(self):
@@ -158,6 +165,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		conn = httplib.HTTPSConnection("api.pagos360.com")
 		pagos_360_id = self.env.user.company_id.pagos_360_id
 		payload = ""
+		print("CREANDO SOLICITUD")
 		# primer vencimiento
 		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d")
 		if fecha_vencimiento < datetime.now():
@@ -166,20 +174,22 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			else:
 				fecha_vencimiento = datetime.now() + timedelta(days=+pagos_360_id.expire_days_payment)
 		fecha_vencimiento = str(fecha_vencimiento.day).zfill(2)+"-"+str(fecha_vencimiento.month).zfill(2)+"-"+str(fecha_vencimiento.year)
+		print("Primer vencimiento:: "+str(fecha_vencimiento))
 		# segundo vencimiento
 		if self.segunda_fecha_vencimiento != False:
 			segunda_fecha_vencimiento = datetime.strptime(self.segunda_fecha_vencimiento, "%Y-%m-%d")
-		if  self.segunda_fecha_vencimiento != False and segunda_fecha_vencimiento >= datetime.now() and self.total_segunda_fecha > self.total:
+		if  self.segunda_fecha_vencimiento != False and segunda_fecha_vencimiento >= datetime.now() and self.total_segunda_fecha >= self.total:
 			segunda_fecha_vencimiento = str(segunda_fecha_vencimiento.day).zfill(2)+"-"+str(segunda_fecha_vencimiento.month).zfill(2)+"-"+str(segunda_fecha_vencimiento.year)
+			print("segunda_fecha_vencimiento:: "+str(segunda_fecha_vencimiento))
 			payload = """{\
 				"payment_request":{\
 					"description":"%s",\
 					"external_reference":"%s",\
-					"payer_name": "%s",\
+					"payer_name":"%s",\
 					"first_due_date": "%s",\
-					"first_total": %s,\
-					"second_due_date": "%s",\
-					"second_total": %s\
+					"first_total":%s,\
+					"second_due_date":"%s",\
+					"second_total":%s\
 				}\
 			}""" % (self.name, self.id, self.partner_id.name, fecha_vencimiento, self.total, segunda_fecha_vencimiento, self.total_segunda_fecha)
 		else:
@@ -187,9 +197,9 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 				"payment_request":{\
 					"description":"%s",\
 					"external_reference":"%s",\
-					"payer_name": "%s",\
-					"first_due_date": "%s",\
-					"first_total": %s\
+					"payer_name":"%s",\
+					"first_due_date":"%s",\
+					"first_total":%s\
 				}\
 			}""" % (self.name, self.id, self.partner_id.name, fecha_vencimiento, self.total)
 		self.pagos_360_generar_pago_voluntario = True
@@ -200,37 +210,43 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		conn.request("POST", "/payment-request", payload, headers)
 		res = conn.getresponse()
 		data = json.loads(res.read().decode("utf-8"))
+		print("DATA::")
+		print(data)
 		self.procesar_respuesta(data)
 
 
 	@api.one
 	def pagos_360_renovar_solicitud(self):
-		conn = httplib.HTTPSConnection("api.pagos360.com")
-		pagos_360_id = self.env.user.company_id.pagos_360_id
-		payload = ""
-		if pagos_360_id.expire_days_payment <= 0:
-			raise ValidationError("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
+		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d")
+		if fecha_vencimiento < datetime.now():
+			conn = httplib.HTTPSConnection("api.pagos360.com")
+			pagos_360_id = self.env.user.company_id.pagos_360_id
+			payload = ""
+			if pagos_360_id.expire_days_payment <= 0:
+				raise ValidationError("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
+			else:
+				fecha_vencimiento = datetime.now() + timedelta(days=+pagos_360_id.expire_days_payment)
+				fecha_vencimiento = str(fecha_vencimiento.day).zfill(2)+"-"+str(fecha_vencimiento.month).zfill(2)+"-"+str(fecha_vencimiento.year)
+				payload = """{\
+					"payment_request":{\
+						"description":"%s",\
+						"external_reference":"%s",\
+						"payer_name": "%s",\
+						"first_due_date": "%s",\
+						"first_total": %s\
+					}\
+				}""" % (self.name, self.id, self.partner_id.name, fecha_vencimiento, self.total)
+			self.pagos_360_generar_pago_voluntario = True
+			headers = {
+				'content-type': "application/json",
+				'authorization': "Bearer " + pagos_360_id.api_key,
+			}
+			conn.request("POST", "/payment-request", payload, headers)
+			res = conn.getresponse()
+			data = json.loads(res.read().decode("utf-8"))
+			self.procesar_respuesta(data)
 		else:
-			fecha_vencimiento = datetime.now() + timedelta(days=+pagos_360_id.expire_days_payment)
-			fecha_vencimiento = str(fecha_vencimiento.day).zfill(2)+"-"+str(fecha_vencimiento.month).zfill(2)+"-"+str(fecha_vencimiento.year)
-			payload = """{\
-				"payment_request":{\
-					"description":"%s",\
-					"external_reference":"%s",\
-					"payer_name": "%s",\
-					"first_due_date": "%s",\
-					"first_total": %s\
-				}\
-			}""" % (self.name, self.id, self.partner_id.name, fecha_vencimiento, self.total)
-		self.pagos_360_generar_pago_voluntario = True
-		headers = {
-			'content-type': "application/json",
-			'authorization': "Bearer " + pagos_360_id.api_key,
-		}
-		conn.request("POST", "/payment-request", payload, headers)
-		res = conn.getresponse()
-		data = json.loads(res.read().decode("utf-8"))
-		self.procesar_respuesta(data)
+			raise ValidationError("La cuota aun no esta vencida y no puede ser renovada.")
 
 
 	@api.one
@@ -257,34 +273,6 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			self.pagos_360_barcode_url = data['barcode_url']
 		if 'pdf_url' in data.keys():
 			self.pagos_360_pdf_url = data['pdf_url']
-
-
-	@api.one
-	def pagos_360_renovar_solicitud(self):
-		rec = super(FinancieraPagos360Solicitud, self).create(values)
-		conn = httplib.HTTPSConnection("api.pagos360.com")
-		pagos_360_id = self.env.user.company_id.pagos_360_id
-		# payload = "{\"payment_request\":{\"description\":\"concepto_del_pago\",\"first_due_date\":\"25-01-2020\",\"first_total\":200.99,\"payer_name\":\"nombre_pagador\"}}"
-		fecha_vencimiento = datetime.now() + pagos_360_id.expire_days_payment
-		fecha_vencimiento = fecha_vencimiento.replace(hour=23,minute=59,second=59,microsecond=0)
-		payload = {
-			'payment_request': {
-				'description': 'Pago de cuota',
-				'payer_name': self.cuota_id.partner_id.name,
-				'first_due_date': fecha_vencimiento,
-				'first_total': self.cuota_id.saldo,
-				# 'second_due_date': self.cuota_id.segunda_fecha_vencimiento,
-				# 'second_total': self.cuota_id.total_segunda_fecha,
-			}
-		}
-		headers = {
-			'content-type': "application/json",
-			'authorization': "<API Key>"
-		}
-		conn.request("POST", "/payment-request", payload, headers)
-		res = conn.getresponse()
-		data = res.read()
-		print(data.decode("utf-8"))
 
 
 class ExtendsFinancieraPrestamo(models.Model):

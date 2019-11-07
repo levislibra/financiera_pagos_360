@@ -94,9 +94,8 @@
               <field name="pagos_360_checkout_url" widget="url" readonly="1"/>
               <field name="pagos_360_barcode_url" widget="url" readonly="1"/>
               <field name="pagos_360_pdf_url" widget="url" readonly="1"/>
-              <button name="pagos_360_actualizar_estado" string="Actualizar estado" type="object" class="oe_highlight"/>
-              <!-- <field name="pagos360_pago_voluntario" readonly="1"/>
-              <field name="pagos360_pago_voluntario" readonly="1"/> -->
+              <label for="pagos_360_actualizar_estado"/><button name="pagos_360_actualizar_estado" string="Actualizar estado" type="object" class="oe_highlight"/>
+              <label for="pagos_360_renovar_solicitud"/><button name="pagos_360_renovar_solicitud" string="Renovar Solicitud" type="object" class="oe_highlight"/>
             </group>
           </page>
         </xpath>
