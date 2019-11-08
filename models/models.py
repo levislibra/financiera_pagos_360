@@ -25,7 +25,7 @@ class FinancieraPagos360Cuenta(models.Model):
 	expire_max_count_create = fields.Integer("Numero de renovaciones")
 
 	@api.one
-	def button_test(self):
+	def actualizar_saldo(self):
 		conn = httplib.HTTPSConnection("api.pagos360.com")
 		headers = { 'authorization': "Bearer " + self.api_key }
 		conn.request("GET", "/account/balances", headers=headers)
@@ -86,6 +86,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 				# Posible solucion es usar un punto de venta exclusivo
 				invoice_date = request_result['paid_at']
 				cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, invoice_date)
+				pagos_360_id.actualizar_saldo()
 			elif cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'expire':
 				self.pagos_360_renovar_solicitud()
 			elif cuota_id.state == 'cobrada' and pagos_360_solicitud_state == 'reverted':

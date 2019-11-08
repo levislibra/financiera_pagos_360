@@ -22,7 +22,7 @@
       <field name="arch" type="xml">
         <form create="false" delete="false">
           <header>
-            <button name="button_test" string="Obtener Saldo Test" type="object" class="oe_highlight"/>
+            <button name="actualizar_saldo" string="Actualizar Saldo" type="object" class="oe_highlight"/>
           </header>
           <sheet>
             <group>

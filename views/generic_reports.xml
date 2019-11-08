@@ -80,14 +80,25 @@
                                                 </tr>
                                             </span>
                                         </thead>
-                                        <tbody class="invoice_tbody" style="font-size:14px;">
-                                            <tr>
-                                                <td>
-                                                    <img t-att-src="l.pagos_360_barcode_url" /><br/>
-                                                    <span t-field="l.pagos_360_barcode"/>
-                                                </td>
-                                            </tr>
-                                        </tbody>
+                                        <span t-if="l.pagos_360_solicitud_state == 'pending'">
+                                            <tbody class="invoice_tbody" style="font-size:14px;">
+                                                <tr>
+                                                    <td>
+                                                        <img t-att-src="l.pagos_360_barcode_url" /><br/>
+                                                        <span t-field="l.pagos_360_barcode"/>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </span>
+                                        <span t-if="l.pagos_360_solicitud_state == 'paid'">
+                                            <tbody class="invoice_tbody" style="font-size:24px;" align="center">
+                                                <tr>
+                                                    <td>
+                                                        Pagado
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </span>
                                     </table>
                                 </td>
                             </tr>
