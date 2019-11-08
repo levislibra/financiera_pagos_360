@@ -74,27 +74,17 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		for _id in cuotas_ids:
 			pagos_360_id = self.env.user.company_id.pagos_360_id
 			cuota_id = cuotas_obj.browse(cr, uid, _id)
-			# old_state = cuota_id.pagos_360_solicitud_state
 			request_result = cuota_id.pagos_360_actualizar_estado()[0]
-			print("request_result :: ")
-			print(request_result)
 			pagos_360_solicitud_state = cuota_id.pagos_360_solicitud_state
-			print("ESTADO ACTUALIZADO A:: "+str(pagos_360_solicitud_state))
-			# print("FUE ACTUALIZADO? "+str(old_state != pagos_360_solicitud_state))
-			# if old_state != pagos_360_solicitud_state:
 			if cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'paid':
-				payment_date = None
-				journal_id = self.company_id.pagos_360_id.journal_id
-				factura_electronica = self.company_id.pagos_360_id.factura_electronica
-				amount = 0
-				invoice_date = None
-				if request_result:
-					payment_date = request_result['paid_at']
-					amount = request_result['amount']
-					# Si se desea hacer factura electronica esto puede traer problemas
-					# dependiendo de la fecha de la utlima factura
-					# Posible solucion es usar un punto de venta exclusivo
-					invoice_date = request_result['paid_at']
+				journal_id = pagos_360_id.journal_id
+				factura_electronica = pagos_360_id.factura_electronica
+				payment_date = request_result['paid_at']
+				amount = request_result['amount']
+				# Si se desea hacer factura electronica esto puede traer problemas
+				# dependiendo de la fecha de la utlima factura
+				# Posible solucion es usar un punto de venta exclusivo
+				invoice_date = request_result['paid_at']
 				cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, invoice_date)
 			elif cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'expire':
 				self.pagos_360_renovar_solicitud()
@@ -155,9 +145,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			self.pagos_360_solicitud_state = data['state']
 		ret = False
 		if 'request_result' in data.keys():
-			print(data['request_result'])
-			print(data['request_result']['amount'])
-			ret = data['request_result']
+			ret = data['request_result'][0]
 		return ret
 
 	@api.one
@@ -165,7 +153,6 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		conn = httplib.HTTPSConnection("api.pagos360.com")
 		pagos_360_id = self.env.user.company_id.pagos_360_id
 		payload = ""
-		print("CREANDO SOLICITUD")
 		# primer vencimiento
 		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d")
 		if fecha_vencimiento < datetime.now():
@@ -174,13 +161,11 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			else:
 				fecha_vencimiento = datetime.now() + timedelta(days=+pagos_360_id.expire_days_payment)
 		fecha_vencimiento = str(fecha_vencimiento.day).zfill(2)+"-"+str(fecha_vencimiento.month).zfill(2)+"-"+str(fecha_vencimiento.year)
-		print("Primer vencimiento:: "+str(fecha_vencimiento))
 		# segundo vencimiento
 		if self.segunda_fecha_vencimiento != False:
 			segunda_fecha_vencimiento = datetime.strptime(self.segunda_fecha_vencimiento, "%Y-%m-%d")
 		if  self.segunda_fecha_vencimiento != False and segunda_fecha_vencimiento >= datetime.now() and self.total_segunda_fecha >= self.total:
 			segunda_fecha_vencimiento = str(segunda_fecha_vencimiento.day).zfill(2)+"-"+str(segunda_fecha_vencimiento.month).zfill(2)+"-"+str(segunda_fecha_vencimiento.year)
-			print("segunda_fecha_vencimiento:: "+str(segunda_fecha_vencimiento))
 			payload = """{\
 				"payment_request":{\
 					"description":"%s",\
@@ -210,8 +195,6 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		conn.request("POST", "/payment-request", payload, headers)
 		res = conn.getresponse()
 		data = json.loads(res.read().decode("utf-8"))
-		print("DATA::")
-		print(data)
 		self.procesar_respuesta(data)
 
 
