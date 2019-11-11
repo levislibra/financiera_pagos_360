@@ -39,19 +39,19 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	_name = 'financiera.prestamo.cuota'
 
 	pagos_360_generar_pago_voluntario = fields.Boolean('Pagos360 - Generar cupon de pago voluntario')
-	pagos_360_solicitud_id = fields.Integer('ID de la solicitud')
+	pagos_360_solicitud_id = fields.Integer('Pagos360 - ID de la solicitud')
 	pagos_360_solicitud_state = fields.Selection([
 			('pending', 'Pendiente'), ('paid', 'Pagada'),
 			('expired', 'Expirada'), ('reverted', 'Revertida')],
-			string='Estado', readonly=True, default='pending')
-	pagos_360_first_due_date = fields.Date('Primer Vencimiento')
-	pagos_360_first_total = fields.Float('Importe', digits=(16,2))
-	pagos_360_second_due_date = fields.Date('Segundo Vencimiento')
-	pagos_360_second_total = fields.Float('Importe', digits=(16,2))
-	pagos_360_barcode = fields.Char('Barcode')
-	pagos_360_checkout_url = fields.Char('Url de pago online')
-	pagos_360_barcode_url = fields.Char('Url imagen del codigo de barras')
-	pagos_360_pdf_url = fields.Char('Url de cupon de pago en pdf')
+			string='Pagos360 - Estado', readonly=True, default='pending')
+	pagos_360_first_due_date = fields.Date('Pagos360 - Primer Vencimiento')
+	pagos_360_first_total = fields.Float('Pagos360 - Importe', digits=(16,2))
+	pagos_360_second_due_date = fields.Date('Pagos360 - Segundo Vencimiento')
+	pagos_360_second_total = fields.Float('Pagos360 - Importe', digits=(16,2))
+	pagos_360_barcode = fields.Char('Pagos360 - Barcode')
+	pagos_360_checkout_url = fields.Char('Pagos360 - Url de pago online')
+	pagos_360_barcode_url = fields.Char('Pagos360 - Url imagen del codigo de barras')
+	pagos_360_pdf_url = fields.Char('Pagos360 - Url de cupon de pago en pdf')
 
 	@api.model
 	def compute_cuota(self):
