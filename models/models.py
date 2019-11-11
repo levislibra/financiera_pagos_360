@@ -204,7 +204,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	@api.one
 	def pagos_360_renovar_solicitud(self):
 		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d")
-		if fecha_vencimiento < datetime.now():
+		if self.pagos_360_solicitud_state == 'expired' and fecha_vencimiento < datetime.now():
 			conn = httplib.HTTPSConnection("api.pagos360.com")
 			pagos_360_id = self.env.user.company_id.pagos_360_id
 			payload = ""
@@ -259,6 +259,34 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			self.pagos_360_barcode_url = data['barcode_url']
 		if 'pdf_url' in data.keys():
 			self.pagos_360_pdf_url = data['pdf_url']
+
+	@api.multi
+	def action_cupon_sent(self):
+		""" Open a window to compose an email, with the edi cupon template
+			message loaded by default
+		"""
+		self.ensure_one()
+		template = self.env.ref('financiera_pagos_360.email_template_edi_cupon', False)
+		compose_form = self.env.ref('mail.email_compose_message_wizard_form', False)
+		ctx = dict(
+			default_model='financiera.prestamo.cuota',
+			default_res_id=self.id,
+			default_use_template=bool(template),
+			default_template_id=template and template.id or False,
+			default_composition_mode='comment',
+			# mark_invoice_as_sent=True,
+		)
+		return {
+			'name': 'Envio cupon de pago',
+			'type': 'ir.actions.act_window',
+			'view_type': 'form',
+			'view_mode': 'form',
+			'res_model': 'mail.compose.message',
+			'views': [(compose_form.id, 'form')],
+			'view_id': compose_form.id,
+			'target': 'new',
+			'context': ctx,
+		}
 
 
 class ExtendsFinancieraPrestamo(models.Model):

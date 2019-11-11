@@ -31,6 +31,7 @@
         'views/extends_res_company.xml',
         'views/generic_reports.xml',
         'data/ir_cron.xml',
+        'data/cupon_action_data.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
