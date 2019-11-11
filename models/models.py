@@ -67,8 +67,10 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		cuotas_ids = cuotas_obj.search(cr, uid, [
 			('pagos_360_generar_pago_voluntario', '=', True),
 			('state', 'in', ('activa', 'judicial', 'incobrable')),
-			('pagos_360_solicitud_state', 'in', ('pending', 'paid')),
+			('pagos_360_solicitud_state', 'in', ('pending', 'expired')),
 		])
+		# No se obtienen las pagadas ya que el cobro no puede ser revertido, debido
+		# a los medios de pago offline
 		_logger.info('Chequear cobro voluntario por medio de pagos360')
 		count = 0
 		for _id in cuotas_ids:
@@ -87,8 +89,8 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 				invoice_date = request_result['paid_at']
 				cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, invoice_date)
 				pagos_360_id.actualizar_saldo()
-			elif cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'expire':
-				self.pagos_360_renovar_solicitud()
+			elif cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'expired':
+				cuota_id.pagos_360_renovar_solicitud()
 			elif cuota_id.state == 'cobrada' and pagos_360_solicitud_state == 'reverted':
 				# Marcar diario con posibilidad de cancelar pagos => asientos
 				# No se puede revertir pagos por medios de cobro off line
