@@ -93,12 +93,12 @@
             <div>
               <field name="pagos_360_first_total" readonly="1"/>
             </div>
-            <label for="pagos_360_second_due_date" string="Segundo vencimiento"/>
-            <div>
+            <label for="pagos_360_second_due_date" string="Segundo vencimiento" attrs="{'invisible': [('pagos_360_second_total', '=', 0)]}"/>
+            <div attrs="{'invisible': [('pagos_360_second_total', '=', 0)]}">
               <field name="pagos_360_second_due_date" readonly="1"/>
             </div>
-            <label for="pagos_360_second_total" string="Importe"/>
-            <div>
+            <label for="pagos_360_second_total" attrs="{'invisible': [('pagos_360_second_total', '=', 0)]}" string="Importe"/>
+            <div attrs="{'invisible': [('pagos_360_second_total', '=', 0)]}">
               <field name="pagos_360_second_total" readonly="1"/>
             </div>
             <label for="pagos_360_barcode" string="Barcode"/>
