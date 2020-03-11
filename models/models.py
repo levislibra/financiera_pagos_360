@@ -1,11 +1,12 @@
  # -*- coding: utf-8 -*-
 
-from openerp import models, fields, api
+from openerp import models, fields, api, _
 from datetime import datetime, timedelta
 from openerp.exceptions import UserError, ValidationError
 import httplib
 import json
 import logging
+import base64
 _logger = logging.getLogger(__name__)
 
 class FinancieraPagos360Cuenta(models.Model):
@@ -23,6 +24,8 @@ class FinancieraPagos360Cuenta(models.Model):
 	expire_create_new = fields.Boolean("Crear nueva Solicitud de Pago al expirar")
 	expire_days_payment = fields.Integer("Dias para pagar la nueva Solicitud de Pago", default=1)
 	expire_max_count_create = fields.Integer("Numero de renovaciones")
+	email_template_id = fields.Many2one('mail.template', 'Plantilla de envio de cuponera por mail')
+	report_name = fields.Char('Pdf adjunto en email')
 
 	@api.one
 	def actualizar_saldo(self):
@@ -295,7 +298,67 @@ class ExtendsFinancieraPrestamo(models.Model):
 
 	pagos_360 = fields.Boolean('Pagos360 - Pago voluntario', compute='_compute_pagos_360')
 	pagos360_pago_voluntario = fields.Boolean('Pagos360 - Pago Voluntario')
+	pagos_360_cupon_sent = fields.Boolean('Pagos360 - Cupon enviado por mail', default=False)
 
 	@api.one
 	def _compute_pagos_360(self):
 		self.pagos_360 = self.env.user.company_id.pagos_360
+
+	@api.multi
+	def action_cupon_sent(self):
+		""" Open a window to compose an email, with the edi payment template
+			message loaded by default
+		"""
+		self.ensure_one()
+		# template = self.env.ref('financiera_pagos_360.email_template_payment', False)
+		pagos_360_id = self.env.user.company_id.pagos_360_id
+		template = pagos_360_id.email_template_id
+		compose_form = self.env.ref('mail.email_compose_message_wizard_form', False)
+		report_name = pagos_360_id.report_name
+		pdf = self.pool['report'].get_pdf(self._cr, self._uid, [self.id], report_name, context=None)
+		new_attachment_id = self.env['ir.attachment'].create({
+			'name': self.display_name+'.pdf',
+			'datas_fname': self.display_name+'.pdf',
+			'type': 'binary',
+			'datas': base64.encodestring(pdf),
+			'res_model': 'account.payment',
+			'res_id': self.id,
+			'mimetype': 'application/x-pdf',
+		})
+		ctx = dict(
+			default_model='account.payment',
+			default_res_id=self.id,
+			default_use_template=bool(template),
+			default_template_id=template and template.id or False,
+			default_composition_mode='comment',
+			default_attachment_ids=[new_attachment_id.id],
+		)
+		return {
+			'name': _('Compose Email'),
+			'type': 'ir.actions.act_window',
+			'view_type': 'form',
+			'view_mode': 'form',
+			'res_model': 'mail.compose.message',
+			'views': [(compose_form.id, 'form')],
+			'view_id': compose_form.id,
+			'target': 'new',
+			'context': ctx,
+		}
+
+class ExtendsMailMail(models.Model):
+	_name = 'mail.mail'
+	_inherit = 'mail.mail'
+
+	@api.multi
+	def send(self, auto_commit=False, raise_exception=False):
+		res = super(ExtendsMailMail, self).send(auto_commit=False, raise_exception=False)
+		context = dict(self._context or {})
+		active_model = context.get('active_model')
+		sub_action = context.get('sub_action')
+		active_id = context.get('active_id')
+		if active_model == 'financiera.prestamo' and sub_action == 'cupon_sent':
+			cr = self.env.cr
+			uid = self.env.uid
+			prestamo_obj = self.pool.get('financiera.prestamo')
+			prestamo_id = prestamo_obj.browse(cr, uid, active_id)
+			prestamo_id.pagos_360_cupon_sent = True

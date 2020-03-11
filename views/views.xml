@@ -42,6 +42,10 @@
                 <field name="journal_id" required="1"/>
                 <field name="factura_electronica"/>
               </group>
+              <group string="Email y reporte">
+                <field name="email_template_id"/>
+                <field name="report_name"/>
+              </group>
             </group>
           </sheet>
         </form>
@@ -68,6 +72,13 @@
         <xpath expr="//field[@name='pago_voluntario_entidad']" position='after'>
           <field name="pagos_360" invisible="1"/>
           <field name="pagos360_pago_voluntario" attrs="{'readonly': [('pagos_360', '=', False)]}"/>
+        </xpath>
+        <xpath expr="//button[@name='wizard_refinanciar_prestamo']" position='after'>
+          <button name="action_cupon_sent" class="oe_highlight" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', True)]}" context="{'sub_action': 'cupon_sent'}"/>
+          <button name="action_cupon_sent" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', False)]}" context="{'sub_action': 'cupon_sent'}"/>
+        </xpath>
+        <xpath expr="//field[@name='tasa_efectiva_anual_iva']" position='after'>
+          <field name="pagos_360_cupon_sent" readonly="1"/>
         </xpath>
       </field>
     </record>

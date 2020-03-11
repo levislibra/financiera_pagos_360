@@ -37,5 +37,63 @@
 </div>
             ]]></field>
         </record>
+
+
+        <!--Email template Cupon de pago GENERAL -->
+        <record id="email_template_cupon_prestamo" model="mail.template">
+            <field name="name">Cupon pago de cuotas - Enviar por Email</field>
+            <field name="email_from">${object.company_id.email}</field>
+            <field name="subject">${object.company_id.name} - Cupon pago de cuotas (Ref ${object.display_name or 'n/a'})</field>
+            <field name="partner_to">${object.partner_id.id}</field>
+            <field name="model_id" ref="financiera_pagos_360.model_financiera_prestamo"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="lang">${object.partner_id.lang}</field>
+            <field name="body_html"><![CDATA[
+<div style="font-family: 'Lucida Grande', Ubuntu, Arial, Verdana, sans-serif; font-size: 12px; color: rgb(34, 34, 34); background-color: #FFF; ">
+    <p>Hola ${object.partner_id.name},</p>
+    <p>Usted tiene disponible la cuponera para el pago de las cuotas: </p>
+    
+    <p style="border-left: 1px solid #8e0000; margin-left: 30px;">
+       &nbsp;&nbsp;<strong>REFERENCIAS</strong><br />
+       &nbsp;&nbsp;Prestamo: <strong>${object.name}</strong><br />
+       &nbsp;&nbsp;Fecha del prestamo: <strong>${object.fecha}</strong><br />
+       &nbsp;&nbsp;Fecha primer vencimiento: ${object.fecha_primer_vencimiento}<br />
+       % if object.origin:
+       &nbsp;&nbsp;Order reference: ${object.origin}<br />
+       % endif
+       % if object.user_id:
+       &nbsp;&nbsp;Tu contacto: <a href="mailto:${object.user_id.email or ''}?subject=Invoice%20${object.number}">${object.user_id.name}</a>
+       % endif
+    </p>  
+        
+    <br/>
+    <p>Si tiene alguna pregunta, no dude en contactarnos.</p>
+    <p>Gracias por elegir ${object.company_id.name or 'us'}!</p>
+    <br/>
+    <br/>
+    <div style="width: 375px; margin: 0px; padding: 0px; background-color: #8E0000; border-top-left-radius: 5px 5px; border-top-right-radius: 5px 5px; background-repeat: repeat no-repeat;">
+        <h3 style="margin: 0px; padding: 2px 14px; font-size: 12px; color: #DDD;">
+            <strong style="text-transform:uppercase;">${object.company_id.name}</strong></h3>
+    </div>
+    <div style="width: 347px; margin: 0px; padding: 5px 14px; line-height: 16px; background-color: #F2F2F2;">
+        <span style="color: #222; margin-bottom: 5px; display: block; ">
+            ${object.company_id.partner_id.sudo().with_context(show_address=True, html_format=True).name_get()[0][1] | safe}
+        </span>
+        % if object.company_id.phone:
+            <div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; ">
+                Phone:&nbsp; ${object.company_id.phone}
+            </div>
+        % endif
+        % if object.company_id.website:
+            <div>
+                Web :&nbsp;<a href="${object.company_id.website}">${object.company_id.website}</a>
+            </div>
+        %endif
+        <p></p>
+    </div>
+</div>
+            ]]></field>
+        </record>
+
     </data>
 </openerp>
