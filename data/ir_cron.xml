@@ -4,10 +4,11 @@
     <!-- <data noupdate="0"> -->
 
         <record id="ir_cron_actualizar_cobros_360" model="ir.cron">
-            <field name="name">Actualizar cobros voluntarios</field>
+            <field name="name">Pagos 360 - Actualizar cupones vencidos</field>
             <field name="user_id" ref="base.user_root" />
-            <field name="interval_number">8</field>
-            <field name="interval_type">hours</field>
+            <field name="priority">1</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
             <field name="numbercall">-1</field>
             <field name="doall" eval="False"/>
             <field name="nextcall" >2019-01-01 12:00:00</field>

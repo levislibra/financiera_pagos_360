@@ -299,6 +299,8 @@ class ExtendsFinancieraPrestamo(models.Model):
 	pagos_360 = fields.Boolean('Pagos360 - Pago voluntario', compute='_compute_pagos_360')
 	pagos360_pago_voluntario = fields.Boolean('Pagos360 - Pago Voluntario')
 	pagos_360_cupon_sent = fields.Boolean('Pagos360 - Cupon enviado por mail', default=False)
+	# Mail de notificaciones
+	email_ids = fields.One2many('mail.mail', 'prestamo_id', 'Email enviados')
 
 	@api.one
 	def _compute_pagos_360(self):
@@ -349,9 +351,11 @@ class ExtendsMailMail(models.Model):
 	_name = 'mail.mail'
 	_inherit = 'mail.mail'
 
+	prestamo_id = fields.Many2one('financiera.prestamo', 'Prestamo notificado')
+	prestamo_state = fields.Char('Tipo')
+
 	@api.multi
 	def send(self, auto_commit=False, raise_exception=False):
-		res = super(ExtendsMailMail, self).send(auto_commit=False, raise_exception=False)
 		context = dict(self._context or {})
 		active_model = context.get('active_model')
 		sub_action = context.get('sub_action')
@@ -362,3 +366,7 @@ class ExtendsMailMail(models.Model):
 			prestamo_obj = self.pool.get('financiera.prestamo')
 			prestamo_id = prestamo_obj.browse(cr, uid, active_id)
 			prestamo_id.pagos_360_cupon_sent = True
+			prestamo_id.email_ids = [self.id]
+			self.prestamo_state = 'Pagos360 - Cuponera'
+		self.auto_delete = False
+		res = super(ExtendsMailMail, self).send(auto_commit=False, raise_exception=False)
