@@ -368,5 +368,5 @@ class ExtendsMailMail(models.Model):
 			prestamo_id.pagos_360_cupon_sent = True
 			prestamo_id.email_ids = [self.id]
 			self.prestamo_state = 'Pagos360 - Cuponera'
-		self.auto_delete = False
+			self.auto_delete = False
 		res = super(ExtendsMailMail, self).send(auto_commit=False, raise_exception=False)
