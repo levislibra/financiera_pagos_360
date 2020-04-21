@@ -74,34 +74,11 @@
           <field name="pagos360_pago_voluntario" attrs="{'readonly': [('pagos_360', '=', False)]}"/>
         </xpath>
         <xpath expr="//button[@name='wizard_refinanciar_prestamo']" position='after'>
-          <button name="action_cupon_sent" class="oe_highlight" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', True)]}" context="{'sub_action': 'cupon_sent'}"/>
-          <button name="action_cupon_sent" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', False)]}" context="{'sub_action': 'cupon_sent'}"/>
+          <button name="action_cupon_sent" class="oe_highlight" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', True)]}"/>
+          <button name="action_cupon_sent" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', False)]}"/>
         </xpath>
         <xpath expr="//field[@name='tasa_efectiva_anual_iva']" position='after'>
           <field name="pagos_360_cupon_sent" readonly="1"/>
-        </xpath>
-        <xpath expr="//page[3]" position='after'>
-          <page string="Email de notificaciones" groups="financiera_prestamos.user">
-            <field name="email_ids">
-              <tree>
-                <field name="id" invisible="1"/>
-                <field name="date"/>
-                <field name="cuota_state"/>
-                <field name="subject"/>
-                <field name="author_id" string="User"/>
-                <field name="message_id" invisible="1"/>
-                <field name="recipient_ids" invisible="1"/>
-                <field name="model" invisible="1"/>
-                <field name="res_id" invisible="1"/>
-                <field name="email_from" invisible="1"/>
-                <field name="state"/>
-                <field name="message_type" invisible="1"/>
-                <button name="send" string="Send Now" type="object" icon="gtk-media-play" states="outgoing"/>
-                <button name="mark_outgoing" string="Retry" type="object" icon="gtk-redo" states="exception,cancel"/>
-                <button name="cancel" string="Cancel Email" type="object" icon="terp-gtk-stop" states="outgoing"/>
-              </tree>
-            </field>
-          </page>
         </xpath>
       </field>
     </record>

@@ -277,6 +277,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			default_use_template=bool(template),
 			default_template_id=template and template.id or False,
 			default_composition_mode='comment',
+			sub_action='cupon_sent',
 			# mark_invoice_as_sent=True,
 		)
 		return {
@@ -299,8 +300,6 @@ class ExtendsFinancieraPrestamo(models.Model):
 	pagos_360 = fields.Boolean('Pagos360 - Pago voluntario', compute='_compute_pagos_360')
 	pagos360_pago_voluntario = fields.Boolean('Pagos360 - Pago Voluntario')
 	pagos_360_cupon_sent = fields.Boolean('Pagos360 - Cupon enviado por mail', default=False)
-	# Mail de notificaciones
-	email_ids = fields.One2many('mail.mail', 'prestamo_id', 'Email enviados')
 
 	@api.one
 	def _compute_pagos_360(self):
@@ -323,12 +322,12 @@ class ExtendsFinancieraPrestamo(models.Model):
 			'datas_fname': self.display_name+'.pdf',
 			'type': 'binary',
 			'datas': base64.encodestring(pdf),
-			'res_model': 'account.payment',
+			'res_model': 'financiera.prestamo',
 			'res_id': self.id,
 			'mimetype': 'application/x-pdf',
 		})
 		ctx = dict(
-			default_model='account.payment',
+			default_model='financiera.prestamo',
 			default_res_id=self.id,
 			default_use_template=bool(template),
 			default_template_id=template and template.id or False,
@@ -351,10 +350,7 @@ class ExtendsMailMail(models.Model):
 	_name = 'mail.mail'
 	_inherit = 'mail.mail'
 
-	prestamo_id = fields.Many2one('financiera.prestamo', 'Prestamo notificado')
-	prestamo_state = fields.Char('Tipo')
-
-	@api.multi
+	@api.one
 	def send(self, auto_commit=False, raise_exception=False):
 		context = dict(self._context or {})
 		active_model = context.get('active_model')
@@ -367,6 +363,6 @@ class ExtendsMailMail(models.Model):
 			prestamo_id = prestamo_obj.browse(cr, uid, active_id)
 			prestamo_id.pagos_360_cupon_sent = True
 			prestamo_id.email_ids = [self.id]
-			self.prestamo_state = 'Pagos360 - Cuponera'
+			self.tipo = 'Pagos360 - Cuponera'
 			self.auto_delete = False
 		res = super(ExtendsMailMail, self).send(auto_commit=False, raise_exception=False)
