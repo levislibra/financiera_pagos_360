@@ -77,7 +77,7 @@
           <button name="action_cupon_sent" class="oe_highlight" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', True)]}"/>
           <button name="action_cupon_sent" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', False)]}"/>
         </xpath>
-        <xpath expr="//field[@name='tasa_efectiva_anual_iva']" position='after'>
+        <xpath expr="//field[@name='email_tc_code_sent']" position='after'>
           <field name="pagos_360_cupon_sent" readonly="1"/>
         </xpath>
       </field>
