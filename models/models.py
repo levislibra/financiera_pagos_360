@@ -206,8 +206,8 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 
 	@api.one
 	def pagos_360_renovar_solicitud(self):
-		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d")
-		if self.pagos_360_solicitud_state == 'expired' and fecha_vencimiento < datetime.now():
+		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d") or False
+		if (self.pagos_360_solicitud_state == 'expired' or self.pagos_360_solicitud_id == 0) and (fecha_vencimiento == False or fecha_vencimiento < datetime.now()):
 			conn = httplib.HTTPSConnection("api.pagos360.com")
 			pagos_360_id = self.env.user.company_id.pagos_360_id
 			payload = ""
