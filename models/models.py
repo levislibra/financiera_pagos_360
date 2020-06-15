@@ -79,7 +79,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		for _id in cuotas_ids:
 			pagos_360_id = self.env.user.company_id.pagos_360_id
 			cuota_id = cuotas_obj.browse(cr, uid, _id)
-			request_result = cuota_id.pagos_360_actualizar_estado()[0]
+			request_result = cuota_id.pagos_360_actualizar_estado()
 			pagos_360_solicitud_state = cuota_id.pagos_360_solicitud_state
 			if cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'paid':
 				journal_id = pagos_360_id.journal_id
@@ -135,23 +135,23 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			multi_factura_punitorio_id.unlink()
 
 
-	@api.one
 	def pagos_360_actualizar_estado(self):
+		ret = False
 		conn = httplib.HTTPSConnection("api.pagos360.com")
 		pagos_360_id = self.env.user.company_id.pagos_360_id
-		headers = {
-			'authorization': "Bearer " + pagos_360_id.api_key,
-		}
-		conn.request("GET", "/payment-request/%s" % self.pagos_360_solicitud_id, headers=headers)
-		res = conn.getresponse()
-		data = json.loads(res.read().decode("utf-8"))
-		if 'error' in data.keys():
-			raise ValidationError(data['error']['message'])
-		if 'state' in data.keys():
-			self.pagos_360_solicitud_state = data['state']
-		ret = False
-		if 'request_result' in data.keys():
-			ret = data['request_result'][0]
+		if len(pagos_360_id) > 0:
+			headers = {
+				'authorization': "Bearer " + pagos_360_id.api_key,
+			}
+			conn.request("GET", "/payment-request/%s" % self.pagos_360_solicitud_id, headers=headers)
+			res = conn.getresponse()
+			data = json.loads(res.read().decode("utf-8"))
+			if 'error' in data.keys():
+				raise ValidationError(data['error']['message'])
+			if 'state' in data.keys():
+				self.pagos_360_solicitud_state = data['state']
+			if 'request_result' in data.keys():
+				ret = data['request_result'][0]
 		return ret
 
 	@api.one
