@@ -333,6 +333,7 @@ class ExtendsFinancieraPrestamo(models.Model):
 			default_template_id=template and template.id or False,
 			default_composition_mode='comment',
 			default_attachment_ids=[new_attachment_id.id],
+			sub_action='cupon_sent',
 		)
 		return {
 			'name': _('Compose Email'),
@@ -362,6 +363,7 @@ class ExtendsMailMail(models.Model):
 			prestamo_obj = self.pool.get('financiera.prestamo')
 			prestamo_id = prestamo_obj.browse(cr, uid, active_id)
 			prestamo_id.pagos_360_cupon_sent = True
+			self.company_id = prestamo_id.company_id.id
 			prestamo_id.email_ids = [self.id]
 			self.tipo = 'Pagos360 - Cuponera'
 			self.auto_delete = False

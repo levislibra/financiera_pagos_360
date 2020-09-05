@@ -83,10 +83,10 @@
       </field>
     </record>
 
-    <record id="prestamo_portal_form_inherited"  model="ir.ui.view">
+    <!-- <record id="prestamo_portal_form_inherited"  model="ir.ui.view">
       <field name="name">Extension Prestamo Portal Form</field>
       <field name="model">financiera.prestamo</field>
-      <field name="inherit_id" ref="financiera_prestamos.financiera_prestamo_portal_form"/>
+      <field name="inherit_id" ref="financiera_app.financiera_prestamo_portal_form"/>
       <field name="arch" type="xml">
         <xpath expr="/form/sheet/notebook/page/field/form/group" position='after'>
           <group string="Cupon de Pago" attrs="{'invisible': [('pagos_360_generar_pago_voluntario', '=', False)]}">
@@ -120,7 +120,6 @@
             <div>
               <field name="pagos_360_checkout_url" widget="url" readonly="1" text="Link de pago online"/>
             </div>
-            <!-- <label for="pagos_360_pdf_url"/> -->
             <label string=" "/>
             <div>
               <field name="pagos_360_pdf_url" widget="url" readonly="1" text="Descargar Cupon de Pago"/>
@@ -130,7 +129,7 @@
           </group>
         </xpath>
       </field>
-    </record>
+    </record> -->
 
 
     <!-- Cuota inherit -->
