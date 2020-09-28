@@ -70,8 +70,11 @@
       <field name="inherit_id" ref="financiera_prestamos.financiera_prestamo_form"/>
       <field name="arch" type="xml">        
         <xpath expr="//field[@name='pago_voluntario_entidad']" position='after'>
-          <field name="pagos_360" invisible="1"/>
-          <field name="pagos360_pago_voluntario" attrs="{'readonly': [('pagos_360', '=', False)]}"/>
+					<div>
+						<field name="pagos_360" invisible="1"/>
+						<label string="Pagos360 - Cupon de pago" style="font-weight: bold;"/>
+						<field name="pagos360_pago_voluntario" attrs="{'readonly': [('pagos_360', '=', False)]}"/>
+					</div>
         </xpath>
         <xpath expr="//button[@name='wizard_refinanciar_prestamo']" position='after'>
           <button name="action_cupon_sent" class="oe_highlight" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', True)]}"/>
