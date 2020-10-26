@@ -56,11 +56,11 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	pagos_360_barcode_url = fields.Char('Pagos360 - Url imagen del codigo de barras')
 	pagos_360_pdf_url = fields.Char('Pagos360 - Url de cupon de pago en pdf')
 
-	@api.model
-	def compute_cuota(self):
-		super(ExtendsFinancieraPrestamoCuota, self).compute_cuota()
-		if self.prestamo_id.pagos360_pago_voluntario:
-			self.pagos_360_crear_solicitud()
+	# @api.model
+	# def compute_cuota(self):
+	# 	super(ExtendsFinancieraPrestamoCuota, self).compute_cuota()
+	# 	if self.prestamo_id.pagos360_pago_voluntario:
+	# 		self.pagos_360_crear_solicitud()
 
 	@api.model
 	def _actualizar_cobros_360(self):
@@ -300,6 +300,13 @@ class ExtendsFinancieraPrestamo(models.Model):
 	pagos_360 = fields.Boolean('Pagos360 - Pago voluntario', compute='_compute_pagos_360')
 	pagos360_pago_voluntario = fields.Boolean('Pagos360 - Pago Voluntario')
 	pagos_360_cupon_sent = fields.Boolean('Pagos360 - Cupon enviado por mail', default=False)
+
+	@api.one
+	def enviar_a_acreditacion_pendiente(self):
+		super(ExtendsFinancieraPrestamo, self).enviar_a_acreditacion_pendiente()
+		for cuota_id in self.cuota_ids:
+			if cuota_id.prestamo_id.pagos360_pago_voluntario:
+				cuota_id.pagos_360_crear_solicitud()
 
 	@api.one
 	def _compute_pagos_360(self):
