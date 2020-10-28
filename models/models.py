@@ -305,13 +305,6 @@ class ExtendsFinancieraPrestamo(models.Model):
 	@api.model
 	def default_get(self, fields):
 		rec = super(ExtendsFinancieraPrestamo, self).default_get(fields)
-		print("default_get")
-		# context = dict(self._context or {})
-		# current_uid = context.get('uid')
-		# current_user = self.env['res.users'].browse(current_uid)
-		# pagos_360_id = current_user.company_id.pagos_360_id
-		print("pagos_360_id 1: ", self.env.user.company_id.pagos_360_id.name)
-		# print("pagos_360_id 2: ", pagos_360_id.name)
 		if len(self.env.user.company_id.pagos_360_id) > 0:
 			rec.update({
 				'pagos360_pago_voluntario': self.env.user.company_id.pagos_360_id.set_default_payment,
