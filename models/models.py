@@ -21,6 +21,7 @@ class FinancieraPagos360Cuenta(models.Model):
 	journal_id = fields.Many2one('account.journal', 'Diario de Cobro', domain="[('type', 'in', ('cash', 'bank'))]")
 	factura_electronica = fields.Boolean('Factura electronica')
 
+	set_default_payment = fields.Boolean("Marcar como medio de pago por defecto")
 	expire_create_new = fields.Boolean("Crear nueva Solicitud de Pago al expirar")
 	expire_days_payment = fields.Integer("Dias para pagar la nueva Solicitud de Pago", default=1)
 	expire_max_count_create = fields.Integer("Numero de renovaciones")
@@ -301,6 +302,23 @@ class ExtendsFinancieraPrestamo(models.Model):
 	pagos360_pago_voluntario = fields.Boolean('Pagos360 - Pago Voluntario')
 	pagos_360_cupon_sent = fields.Boolean('Pagos360 - Cupon enviado por mail', default=False)
 
+	@api.model
+	def default_get(self, fields):
+		rec = super(ExtendsFinancieraPrestamo, self).default_get(fields)
+		print("default_get")
+		# context = dict(self._context or {})
+		# current_uid = context.get('uid')
+		# current_user = self.env['res.users'].browse(current_uid)
+		# pagos_360_id = current_user.company_id.pagos_360_id
+		print("pagos_360_id 1: ", self.env.user.company_id.pagos_360_id.name)
+		# print("pagos_360_id 2: ", pagos_360_id.name)
+		if len(self.env.user.company_id.pagos_360_id) > 0:
+			rec.update({
+				'pagos360_pago_voluntario': self.env.user.company_id.pagos_360_id.set_default_payment,
+			})
+		return rec
+
+
 	@api.one
 	def enviar_a_acreditacion_pendiente(self):
 		super(ExtendsFinancieraPrestamo, self).enviar_a_acreditacion_pendiente()
@@ -310,7 +328,7 @@ class ExtendsFinancieraPrestamo(models.Model):
 
 	@api.one
 	def _compute_pagos_360(self):
-		self.pagos_360 = self.env.user.company_id.pagos_360
+		self.pagos_360 = self.company_id.pagos_360
 
 	@api.multi
 	def action_cupon_sent(self):
