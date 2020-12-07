@@ -78,8 +78,8 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		_logger.info('Chequear cobro voluntario por medio de pagos360')
 		count = 0
 		for _id in cuotas_ids:
-			pagos_360_id = self.env.user.company_id.pagos_360_id
 			cuota_id = cuotas_obj.browse(cr, uid, _id)
+			pagos_360_id = cuota_id.company_id.pagos_360_id
 			request_result = cuota_id.pagos_360_actualizar_estado()
 			pagos_360_solicitud_state = cuota_id.pagos_360_solicitud_state
 			if cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'paid':
@@ -139,8 +139,8 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	def pagos_360_actualizar_estado(self):
 		ret = False
 		conn = httplib.HTTPSConnection("api.pagos360.com")
-		pagos_360_id = self.env.user.company_id.pagos_360_id
-		if len(pagos_360_id) > 0:
+		pagos_360_id = self.company_id.pagos_360_id
+		if len(pagos_360_id) > 0 and self.pagos_360_solicitud_id > 0:
 			headers = {
 				'authorization': "Bearer " + pagos_360_id.api_key,
 			}
