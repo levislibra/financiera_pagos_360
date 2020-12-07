@@ -158,7 +158,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	@api.one
 	def pagos_360_crear_solicitud(self):
 		conn = httplib.HTTPSConnection("api.pagos360.com")
-		pagos_360_id = self.env.user.company_id.pagos_360_id
+		pagos_360_id = self.company_id.pagos_360_id
 		payload = ""
 		# primer vencimiento
 		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d")
@@ -210,7 +210,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d") or False
 		if (self.pagos_360_solicitud_state == 'expired' or self.pagos_360_solicitud_id == 0) and (fecha_vencimiento == False or fecha_vencimiento < datetime.now()):
 			conn = httplib.HTTPSConnection("api.pagos360.com")
-			pagos_360_id = self.env.user.company_id.pagos_360_id
+			pagos_360_id = self.company_id.pagos_360_id
 			payload = ""
 			if pagos_360_id.expire_days_payment <= 0:
 				raise ValidationError("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
@@ -330,7 +330,7 @@ class ExtendsFinancieraPrestamo(models.Model):
 		"""
 		self.ensure_one()
 		# template = self.env.ref('financiera_pagos_360.email_template_payment', False)
-		pagos_360_id = self.env.user.company_id.pagos_360_id
+		pagos_360_id = self.company_id.pagos_360_id
 		template = pagos_360_id.email_template_id
 		compose_form = self.env.ref('mail.email_compose_message_wizard_form', False)
 		report_name = pagos_360_id.report_name
