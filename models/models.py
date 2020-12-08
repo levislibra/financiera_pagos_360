@@ -155,6 +155,18 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 				ret = data['request_result'][0]
 		return ret
 
+	def normalize(self, s):
+		replacements = (
+			("á", "a"),
+			("é", "e"),
+			("í", "i"),
+			("ó", "o"),
+			("ú", "u"),
+		)
+		for a, b in replacements:
+			s = s.replace(a, b).replace(a.upper(), b.upper())
+		return s
+
 	@api.one
 	def pagos_360_crear_solicitud(self):
 		conn = httplib.HTTPSConnection("api.pagos360.com")
@@ -183,7 +195,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 					"second_due_date":"%s",\
 					"second_total":%s\
 				}\
-			}""" % (self.name, self.id, self.partner_id.name, fecha_vencimiento, self.total, segunda_fecha_vencimiento, self.total_segunda_fecha)
+			}""" % (self.name, self.id, self.normalize(self.partner_id.name), fecha_vencimiento, self.total, segunda_fecha_vencimiento, self.total_segunda_fecha)
 		else:
 			payload = """{\
 				"payment_request":{\
@@ -193,7 +205,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 					"first_due_date":"%s",\
 					"first_total":%s\
 				}\
-			}""" % (self.name, self.id, self.partner_id.name, fecha_vencimiento, self.total)
+			}""" % (self.name, self.id, self.normalize(self.partner_id.name), fecha_vencimiento, self.total)
 		self.pagos_360_generar_pago_voluntario = True
 		headers = {
 			'content-type': "application/json",
