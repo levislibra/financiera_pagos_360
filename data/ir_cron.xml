@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <openerp>
-    <!-- <data noupdate="0"> -->
+    <data noupdate="1">
 
         <record id="ir_cron_actualizar_cobros_360" model="ir.cron">
             <field name="name">Pagos 360 - Actualizar cupones vencidos</field>
@@ -14,6 +14,7 @@
             <field name="nextcall" >2019-01-01 12:00:00</field>
             <field name="model">financiera.prestamo.cuota</field>
             <field name="function">_actualizar_cobros_360</field>
-        </record>
+				</record>
+		</data>
 
 </openerp>
