@@ -83,6 +83,8 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			request_result = cuota_id.pagos_360_actualizar_estado()
 			pagos_360_solicitud_state = cuota_id.pagos_360_solicitud_state
 			if cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'paid':
+				superuser_id = self.pool.get('res.users').browse(1)
+				superuser_id.company_id = cuota_id.company_id.id
 				journal_id = pagos_360_id.journal_id
 				factura_electronica = pagos_360_id.factura_electronica
 				payment_date = request_result['paid_at']
