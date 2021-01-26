@@ -138,6 +138,11 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			multi_factura_punitorio_id.unlink()
 
 
+	@api.one
+	def button_pagos_360_actualizar_estado(self):
+		self.pagos_360_actualizar_estado()
+
+
 	def pagos_360_actualizar_estado(self):
 		ret = False
 		conn = httplib.HTTPSConnection("api.pagos360.com")
@@ -315,6 +320,7 @@ class ExtendsFinancieraPrestamo(models.Model):
 	pagos_360 = fields.Boolean('Pagos360 - Pago voluntario', compute='_compute_pagos_360')
 	pagos360_pago_voluntario = fields.Boolean('Pagos360 - Pago Voluntario')
 	pagos_360_cupon_sent = fields.Boolean('Pagos360 - Cupon enviado por mail', default=False)
+	# pagos_360_cupon_generado_cuotas = fields.Boolean('Pagos360 - Cupon no generado en todas las cuotas', compute='_compute_pagos_360_cupon_cuotas')
 
 	@api.model
 	def default_get(self, fields):
@@ -325,17 +331,29 @@ class ExtendsFinancieraPrestamo(models.Model):
 			})
 		return rec
 
+	@api.one
+	def crear_solicitudes_pagos_360(self):
+		for cuota_id in self.cuota_ids:
+			if self.pagos360_pago_voluntario:
+				cuota_id.pagos_360_crear_solicitud()
 
 	@api.one
 	def enviar_a_acreditacion_pendiente(self):
 		super(ExtendsFinancieraPrestamo, self).enviar_a_acreditacion_pendiente()
-		for cuota_id in self.cuota_ids:
-			if cuota_id.prestamo_id.pagos360_pago_voluntario:
-				cuota_id.pagos_360_crear_solicitud()
+		self.crear_solicitudes_pagos_360()
 
 	@api.one
 	def _compute_pagos_360(self):
 		self.pagos_360 = self.company_id.pagos_360
+
+	# @api.one
+	# def _compute_pagos_360_cupon_generado_cuotas(self):
+	# 	ret = False
+	# 	for cuota_id in self.cuota_ids:
+	# 		if cuota_id.pagos_360_generar_pago_voluntario:
+	# 			ret = True
+	# 			break
+	# 	self.pagos_360_cupon_generado_cuotas = ret
 
 	@api.multi
 	def action_cupon_sent(self):

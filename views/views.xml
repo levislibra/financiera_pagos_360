@@ -79,11 +79,16 @@
         </xpath>
         <xpath expr="//button[@name='wizard_refinanciar_prestamo']" position='after'>
           <button name="action_cupon_sent" class="oe_highlight" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', True)]}"/>
-          <button name="action_cupon_sent" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', False)]}"/>
+					<button name="action_cupon_sent" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', False)]}"/>
         </xpath>
         <xpath expr="//group[@name='notificaciones']" position='after'>
 					<group string="Pagos 360 - Cupon de pago voluntario">
 						<field name="pagos_360_cupon_sent" readonly="1"/>
+						<label for="crear_solicitudes_pagos_360" string=" " 
+							attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), ('state', 'not in', ('acreditacion_pendiente', 'acreditado'))]}"/>
+						<button name="crear_solicitudes_pagos_360" string="Crear cupones de pago" type="object" 
+							attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), ('state', 'not in', ('acreditacion_pendiente', 'acreditado'))]}"
+							confirm="Esta seguro que desea generar una nueva cuponera de pagos? Si existe una cuponera ya generada sobre este prestamo, sera descartada. Esta accion es irreversible!"/>
 					</group>
         </xpath>
       </field>
@@ -159,7 +164,7 @@
               <field name="pagos_360_checkout_url" widget="url" readonly="1"/>
               <field name="pagos_360_barcode_url" widget="url" readonly="1"/>
               <field name="pagos_360_pdf_url" widget="url" readonly="1"/>
-              <label for="pagos_360_actualizar_estado"/><button name="pagos_360_actualizar_estado" string="Actualizar estado" type="object"/>
+              <label for="button_pagos_360_actualizar_estado"/><button name="button_pagos_360_actualizar_estado" string="Actualizar estado" type="object"/>
               <label for="pagos_360_renovar_solicitud"/><button name="pagos_360_renovar_solicitud" string="Renovar Solicitud" type="object"/>
               <label for="action_cupon_sent"/><button name="action_cupon_sent" string="Enviar cupon por Email" type="object" class="oe_highlight"/>
             </group>
