@@ -57,12 +57,6 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	pagos_360_barcode_url = fields.Char('Pagos360 - Url imagen del codigo de barras')
 	pagos_360_pdf_url = fields.Char('Pagos360 - Url de cupon de pago en pdf')
 
-	# @api.model
-	# def compute_cuota(self):
-	# 	super(ExtendsFinancieraPrestamoCuota, self).compute_cuota()
-	# 	if self.prestamo_id.pagos360_pago_voluntario:
-	# 		self.pagos_360_crear_solicitud()
-
 	@api.model
 	def _actualizar_cobros_360(self):
 		cr = self.env.cr
@@ -80,7 +74,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		for _id in cuotas_ids:
 			cuota_id = cuotas_obj.browse(cr, uid, _id)
 			pagos_360_id = cuota_id.company_id.pagos_360_id
-			request_result = cuota_id.pagos_360_actualizar_estado()
+			request_result = cuota_id.pagos_360_actualizar_estado(True)
 			pagos_360_solicitud_state = cuota_id.pagos_360_solicitud_state
 			if cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'paid':
 				superuser_id = self.pool.get('res.users').browse(cr, uid, 1)
@@ -96,7 +90,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 				cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, invoice_date)
 				pagos_360_id.actualizar_saldo()
 			elif cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'expired':
-				cuota_id.pagos_360_renovar_solicitud()
+				cuota_id.pagos_360_renovar_solicitud(log_consola=True)
 			elif cuota_id.state == 'cobrada' and pagos_360_solicitud_state == 'reverted':
 				# Marcar diario con posibilidad de cancelar pagos => asientos
 				# No se puede revertir pagos por medios de cobro off line
@@ -143,7 +137,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		self.pagos_360_actualizar_estado()
 
 
-	def pagos_360_actualizar_estado(self):
+	def pagos_360_actualizar_estado(self, log_consola=None):
 		ret = False
 		conn = httplib.HTTPSConnection("api.pagos360.com")
 		pagos_360_id = self.company_id.pagos_360_id
@@ -155,7 +149,10 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			res = conn.getresponse()
 			data = json.loads(res.read().decode("utf-8"))
 			if 'error' in data.keys():
-				raise ValidationError(data['error']['message'])
+				if log_consola == True:
+					_logger.error(data['error']['message'])
+				else:
+					raise ValidationError(data['error']['message'])
 			if 'state' in data.keys():
 				self.pagos_360_solicitud_state = data['state']
 			if 'request_result' in data.keys():
@@ -175,7 +172,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		return s
 
 	@api.one
-	def pagos_360_crear_solicitud(self):
+	def pagos_360_crear_solicitud(self, log_consola=None):
 		conn = httplib.HTTPSConnection("api.pagos360.com")
 		pagos_360_id = self.company_id.pagos_360_id
 		payload = ""
@@ -183,7 +180,10 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d")
 		if fecha_vencimiento < datetime.now():
 			if pagos_360_id.expire_days_payment <= 0:
-				raise ValidationError("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
+				if log_consola == True:
+					_logger.error("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
+				else:
+					raise ValidationError("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
 			else:
 				fecha_vencimiento = datetime.now() + timedelta(days=+pagos_360_id.expire_days_payment)
 		fecha_vencimiento = str(fecha_vencimiento.day).zfill(2)+"-"+str(fecha_vencimiento.month).zfill(2)+"-"+str(fecha_vencimiento.year)
@@ -221,18 +221,21 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		conn.request("POST", "/payment-request", payload, headers)
 		res = conn.getresponse()
 		data = json.loads(res.read().decode("utf-8"))
-		self.procesar_respuesta(data)
+		self.procesar_respuesta(data, log_consola)
 
 
 	@api.one
-	def pagos_360_renovar_solicitud(self):
+	def pagos_360_renovar_solicitud(self, log_consola=None):
 		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d") or False
 		if (self.pagos_360_solicitud_state == 'expired' or self.pagos_360_solicitud_id == 0) and (fecha_vencimiento == False or fecha_vencimiento < datetime.now()):
 			conn = httplib.HTTPSConnection("api.pagos360.com")
 			pagos_360_id = self.company_id.pagos_360_id
 			payload = ""
 			if pagos_360_id.expire_days_payment <= 0:
-				raise ValidationError("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
+				if log_consola == True:
+					_logger.error("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
+				else:
+					raise ValidationError("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
 			else:
 				fecha_vencimiento = datetime.now() + timedelta(days=+pagos_360_id.expire_days_payment)
 				fecha_vencimiento = str(fecha_vencimiento.day).zfill(2)+"-"+str(fecha_vencimiento.month).zfill(2)+"-"+str(fecha_vencimiento.year)
@@ -253,15 +256,21 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			conn.request("POST", "/payment-request", payload, headers)
 			res = conn.getresponse()
 			data = json.loads(res.read().decode("utf-8"))
-			self.procesar_respuesta(data)
+			self.procesar_respuesta(data, log_consola)
 		else:
-			raise ValidationError("La cuota aun no esta vencida y no puede ser renovada.")
+			if log_consola == True:
+				_logger.error("La cuota aun no esta vencida y no puede ser renovada.")
+			else:
+				raise ValidationError("La cuota aun no esta vencida y no puede ser renovada.")
 
 
 	@api.one
-	def procesar_respuesta(self, data):
+	def procesar_respuesta(self, data, log_consola=None):
 		if 'error' in data.keys():
-			raise ValidationError(data['error']['message'])
+			if log_consola == True:
+				_logger.error(data['error']['message'])
+			else:
+				raise ValidationError(data['error']['message'])
 		if 'id' in data.keys():
 			self.pagos_360_solicitud_id = data['id']
 		if 'state' in data.keys():
