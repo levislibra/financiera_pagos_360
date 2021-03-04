@@ -119,6 +119,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			}
 			multi_factura_id = self.env['financiera.prestamo.cuota.multi.factura'].create(fpcmf_values)
 			self.facturar_cuota(invoice_date, factura_electronica, multi_factura_id, multi_cobro_id)
+		multi_factura_punitorio_id = None
 		if self.punitorio_a_facturar > 0:
 			fpcmf_values = {
 				'invoice_type': 'punitorio',
@@ -128,7 +129,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			self.facturar_punitorio_cuota(invoice_date, factura_electronica, multi_factura_punitorio_id, multi_cobro_id)
 		if multi_factura_id.invoice_amount == 0:
 			multi_factura_id.unlink()
-		if multi_factura_punitorio_id.invoice_amount == 0:
+		if multi_factura_punitorio_id != None and multi_factura_punitorio_id.invoice_amount == 0:
 			multi_factura_punitorio_id.unlink()
 
 
