@@ -249,7 +249,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 						"first_due_date": "%s",\
 						"first_total": %s\
 					}\
-				}""" % (self.name, self.id, self.partner_id.name, fecha_vencimiento, self.total)
+				}""" % (self.name, self.id, self.normalize(self.partner_id.name), fecha_vencimiento, self.total)
 			self.pagos_360_generar_pago_voluntario = True
 			headers = {
 				'content-type': "application/json",

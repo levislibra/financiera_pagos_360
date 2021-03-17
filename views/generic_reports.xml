@@ -69,13 +69,13 @@
                                         <thead align="center">
                                             <tr>
                                                 <td>Primer Vencimiento</td>
-                                                <td><span t-field="l.pagos_360_first_due_date"/></td>
+                                                <td><span t-field="l.pagos_360_first_due_date" t-field-options='{"format": "dd/MM/yyyy"}'/></td>
                                                 <td>$<span t-field="l.pagos_360_first_total"/></td>
                                             </tr>
                                             <span t-if="l.pagos_360_second_due_date">
                                                 <tr>
                                                     <td>Segundo Vencimiento</td>
-                                                    <td><span t-field="l.pagos_360_second_due_date"/></td>
+                                                    <td><span t-field="l.pagos_360_second_due_date" t-field-options='{"format": "dd/MM/yyyy"}'/></td>
                                                     <td>$<span t-field="l.pagos_360_second_total"/></td>
                                                 </tr>
                                             </span>
