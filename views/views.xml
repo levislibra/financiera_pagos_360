@@ -25,11 +25,13 @@
             <button name="actualizar_saldo" string="Actualizar Saldo" type="object" class="oe_highlight"/>
           </header>
           <sheet>
+						<group>
+							<field name="company_id" groups="base.group_erp_manager"/>
+							<field name="name"/>
+							<field name="api_key" required="1"/>
+						</group>
             <group>
-              <group>
-                <field name="company_id" groups="base.group_erp_manager"/>
-                <field name="name"/>
-                <field name="api_key" required="1"/>
+              <group string="Saldos">
                 <field name="available_balance"/>
                 <field name="unavailable_balance"/>
               </group>

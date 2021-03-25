@@ -379,8 +379,8 @@ class ExtendsFinancieraPrestamo(models.Model):
 		report_name = pagos_360_id.report_name
 		pdf = self.pool['report'].get_pdf(self._cr, self._uid, [self.id], report_name, context=None)
 		new_attachment_id = self.env['ir.attachment'].create({
-			'name': self.display_name+'.pdf',
-			'datas_fname': self.display_name+'.pdf',
+			'name': 'Cuponera ' + self.display_name + '.pdf',
+			'datas_fname': 'Cuponera ' + self.display_name + '.pdf',
 			'type': 'binary',
 			'datas': base64.encodestring(pdf),
 			'res_model': 'financiera.prestamo',
@@ -407,6 +407,28 @@ class ExtendsFinancieraPrestamo(models.Model):
 			'target': 'new',
 			'context': ctx,
 		}
+
+	@api.one
+	def enviar_email_cuponera_prestamo(self):
+		if len(self.company_id.pagos_360_id) > 0:
+			pagos_360_id = self.company_id.pagos_360_id
+			if len(pagos_360_id.email_template_id) > 0:
+				template = pagos_360_id.email_template_id
+				report_name = pagos_360_id.report_name
+				if report_name:
+					pdf = self.pool['report'].get_pdf(self._cr, self._uid, [self.id], report_name, context=None)
+					new_attachment_id = self.env['ir.attachment'].create({
+						'name': 'Cuponera ' + self.display_name+'.pdf',
+						'datas_fname': 'Cuponera ' + self.display_name+'.pdf',
+						'type': 'binary',
+						'datas': base64.encodestring(pdf),
+						'res_model': 'financiera.prestamo',
+						'res_id': self.id,
+						'mimetype': 'application/x-pdf',
+					})
+					template.attachment_ids = [(6, 0, [new_attachment_id.id])]
+				# context = self.env.context.copy()
+				template.send_mail(self.id, raise_exception=False, force_send=True)
 
 class ExtendsMailMail(models.Model):
 	_name = 'mail.mail'
