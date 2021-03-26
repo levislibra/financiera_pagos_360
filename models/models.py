@@ -430,6 +430,15 @@ class ExtendsFinancieraPrestamo(models.Model):
 				# context = self.env.context.copy()
 				template.send_mail(self.id, raise_exception=False, force_send=True)
 
+	@api.multi
+	def cuponera_de_pagos_report(self):
+		self.ensure_one()
+		pagos_360_id = self.company_id.pagos_360_id
+		if len(pagos_360_id) > 0 and pagos_360_id.report_name:
+			return self.env['report'].get_action(self, pagos_360_id.report_name)
+		else:
+			raise UserError("Reporte de cuponera no configurado.")
+
 class ExtendsMailMail(models.Model):
 	_name = 'mail.mail'
 	_inherit = 'mail.mail'
