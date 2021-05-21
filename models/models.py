@@ -9,6 +9,7 @@ import logging
 import base64
 _logger = logging.getLogger(__name__)
 
+WEBHOOK_DIR = "https://cloudlibrasoft.com/financiera.pagos.360/webhook"
 class FinancieraPagos360Cuenta(models.Model):
 	_name = 'financiera.pagos.360.cuenta'
 
@@ -57,46 +58,68 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	pagos_360_barcode_url = fields.Char('Pagos360 - Url imagen del codigo de barras')
 	pagos_360_pdf_url = fields.Char('Pagos360 - Url de cupon de pago en pdf')
 
-	@api.model
-	def _actualizar_cobros_360(self):
-		cr = self.env.cr
-		uid = self.env.uid
-		cuotas_obj = self.pool.get('financiera.prestamo.cuota')
-		cuotas_ids = cuotas_obj.search(cr, uid, [
-			('pagos_360_generar_pago_voluntario', '=', True),
-			('state', 'in', ('activa', 'judicial', 'incobrable')),
-			('pagos_360_solicitud_state', 'in', ('pending', 'expired')),
-		])
-		# No se obtienen las pagadas ya que el cobro no puede ser revertido, debido
-		# a los medios de pago offline
-		_logger.info('Chequear cobro voluntario por medio de pagos360')
-		count = 0
-		for _id in cuotas_ids:
-			cuota_id = cuotas_obj.browse(cr, uid, _id)
-			pagos_360_id = cuota_id.company_id.pagos_360_id
-			request_result = cuota_id.pagos_360_actualizar_estado(True)
-			pagos_360_solicitud_state = cuota_id.pagos_360_solicitud_state
-			if cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'paid':
-				superuser_id = self.pool.get('res.users').browse(cr, uid, 1)
-				superuser_id.company_id = cuota_id.company_id.id
+	# @api.model
+	# def _actualizar_cobros_360(self):
+	# 	cr = self.env.cr
+	# 	uid = self.env.uid
+	# 	cuotas_obj = self.pool.get('financiera.prestamo.cuota')
+	# 	cuotas_ids = cuotas_obj.search(cr, uid, [
+	# 		('pagos_360_generar_pago_voluntario', '=', True),
+	# 		('state', 'in', ('activa', 'judicial', 'incobrable')),
+	# 		('pagos_360_solicitud_state', 'in', ('pending', 'expired')),
+	# 	])
+	# 	# No se obtienen las pagadas ya que el cobro no puede ser revertido, debido
+	# 	# a los medios de pago offline
+	# 	_logger.info('Chequear cobro voluntario por medio de pagos360')
+	# 	count = 0
+	# 	for _id in cuotas_ids:
+	# 		cuota_id = cuotas_obj.browse(cr, uid, _id)
+	# 		pagos_360_id = cuota_id.company_id.pagos_360_id
+	# 		request_result = cuota_id.pagos_360_actualizar_estado(True)
+	# 		pagos_360_solicitud_state = cuota_id.pagos_360_solicitud_state
+	# 		if cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'paid':
+	# 			superuser_id = self.pool.get('res.users').browse(cr, uid, 1)
+	# 			superuser_id.company_id = cuota_id.company_id.id
+	# 			journal_id = pagos_360_id.journal_id
+	# 			factura_electronica = pagos_360_id.factura_electronica
+	# 			payment_date = request_result['paid_at']
+	# 			amount = request_result['amount']
+	# 			# Si se desea hacer factura electronica esto puede traer problemas
+	# 			# dependiendo de la fecha de la utlima factura
+	# 			# Posible solucion es usar un punto de venta exclusivo
+	# 			invoice_date = request_result['paid_at']
+	# 			cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, invoice_date)
+	# 			pagos_360_id.actualizar_saldo()
+	# 		elif cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'expired':
+	# 			cuota_id.pagos_360_renovar_solicitud(log_consola=True)
+	# 		elif cuota_id.state == 'cobrada' and pagos_360_solicitud_state == 'reverted':
+	# 			# Marcar diario con posibilidad de cancelar pagos => asientos
+	# 			# No se puede revertir pagos por medios de cobro off line
+	# 			pass
+	# 		count += 1
+	# 	_logger.info('Finalizo el chequeo: %s cuotas chequeadas', count)
+
+	@api.one
+	def button_actualizar_estado(self):
+		print("button_actualizar_estado")
+		print("chequeamos")
+		pagos_360_id = self.company_id.pagos_360_id
+		print("self.state: ", self.state)
+		if self.state in ('activa', 'judicial', 'incobrable'):
+			solicitud_pago = self.pagos_360_obtener_solicitud_pago()
+			print("solicitud_pago:: ", solicitud_pago)
+			if self.state in ('activa', 'judicial', 'incobrable') and solicitud_pago['state'] == 'paid':
+				request_result = solicitud_pago['request_result'][0]
 				journal_id = pagos_360_id.journal_id
 				factura_electronica = pagos_360_id.factura_electronica
 				payment_date = request_result['paid_at']
 				amount = request_result['amount']
-				# Si se desea hacer factura electronica esto puede traer problemas
-				# dependiendo de la fecha de la utlima factura
-				# Posible solucion es usar un punto de venta exclusivo
-				invoice_date = request_result['paid_at']
-				cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, invoice_date)
+				invoice_date = datetime.now()
+				self.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, invoice_date)
+				self.pagos_360_solicitud_state = 'paid'
 				pagos_360_id.actualizar_saldo()
-			elif cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'expired':
-				cuota_id.pagos_360_renovar_solicitud(log_consola=True)
-			elif cuota_id.state == 'cobrada' and pagos_360_solicitud_state == 'reverted':
-				# Marcar diario con posibilidad de cancelar pagos => asientos
-				# No se puede revertir pagos por medios de cobro off line
-				pass
-			count += 1
-		_logger.info('Finalizo el chequeo: %s cuotas chequeadas', count)
+		else:
+			raise UserError('La cuota debe estar en estado activa, judicial o incobrable.')
 
 	@api.one
 	def pagos_360_cobrar_y_facturar(self, payment_date, journal_id, factura_electronica, amount, invoice_date):
@@ -133,13 +156,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			multi_factura_punitorio_id.unlink()
 
 
-	@api.one
-	def button_pagos_360_actualizar_estado(self):
-		self.pagos_360_actualizar_estado()
-
-
-	def pagos_360_actualizar_estado(self, log_consola=None):
-		ret = False
+	def pagos_360_obtener_solicitud_pago(self):
 		conn = httplib.HTTPSConnection("api.pagos360.com")
 		pagos_360_id = self.company_id.pagos_360_id
 		if len(pagos_360_id) > 0 and self.pagos_360_solicitud_id > 0:
@@ -149,16 +166,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			conn.request("GET", "/payment-request/%s" % self.pagos_360_solicitud_id, headers=headers)
 			res = conn.getresponse()
 			data = json.loads(res.read().decode("utf-8"))
-			if 'error' in data.keys():
-				if log_consola == True:
-					_logger.error(data['error']['message'])
-				else:
-					raise ValidationError(data['error']['message'])
-			if 'state' in data.keys():
-				self.pagos_360_solicitud_state = data['state']
-			if 'request_result' in data.keys():
-				ret = data['request_result'][0]
-		return ret
+		return data
 
 	def normalize(self, s):
 		replacements = (
@@ -223,21 +231,18 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		conn.request("POST", "/payment-request", payload, headers)
 		res = conn.getresponse()
 		data = json.loads(res.read().decode("utf-8"))
-		self.procesar_respuesta(data, log_consola)
+		self.procesar_respuesta(data)
 
 
 	@api.one
-	def pagos_360_renovar_solicitud(self, log_consola=None):
+	def pagos_360_renovar_solicitud(self):
 		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d") or False
 		if (self.pagos_360_solicitud_state == 'expired' or self.pagos_360_solicitud_id == 0) and (fecha_vencimiento == False or fecha_vencimiento < datetime.now()):
 			conn = httplib.HTTPSConnection("api.pagos360.com")
 			pagos_360_id = self.company_id.pagos_360_id
 			payload = ""
 			if pagos_360_id.expire_days_payment <= 0:
-				if log_consola == True:
-					_logger.error("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
-				else:
-					raise ValidationError("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
+				_logger.error("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
 			else:
 				fecha_vencimiento = datetime.now() + timedelta(days=+pagos_360_id.expire_days_payment)
 				fecha_vencimiento = str(fecha_vencimiento.day).zfill(2)+"-"+str(fecha_vencimiento.month).zfill(2)+"-"+str(fecha_vencimiento.year)
@@ -258,21 +263,15 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			conn.request("POST", "/payment-request", payload, headers)
 			res = conn.getresponse()
 			data = json.loads(res.read().decode("utf-8"))
-			self.procesar_respuesta(data, log_consola)
+			self.procesar_respuesta(data)
 		else:
-			if log_consola == True:
-				_logger.error("La cuota aun no esta vencida y no puede ser renovada.")
-			else:
-				raise ValidationError("La cuota aun no esta vencida y no puede ser renovada.")
+			_logger.error("La cuota aun no esta vencida y no puede ser renovada.")
 
 
 	@api.one
-	def procesar_respuesta(self, data, log_consola=None):
+	def procesar_respuesta(self, data):
 		if 'error' in data.keys():
-			if log_consola == True:
-				_logger.error(data['error']['message'])
-			else:
-				raise ValidationError(data['error']['message'])
+			_logger.error(data['error']['message'])
 		if 'id' in data.keys():
 			self.pagos_360_solicitud_id = data['id']
 		if 'state' in data.keys():
