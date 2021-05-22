@@ -58,47 +58,6 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	pagos_360_barcode_url = fields.Char('Pagos360 - Url imagen del codigo de barras')
 	pagos_360_pdf_url = fields.Char('Pagos360 - Url de cupon de pago en pdf')
 
-	# @api.model
-	# def _actualizar_cobros_360(self):
-	# 	cr = self.env.cr
-	# 	uid = self.env.uid
-	# 	cuotas_obj = self.pool.get('financiera.prestamo.cuota')
-	# 	cuotas_ids = cuotas_obj.search(cr, uid, [
-	# 		('pagos_360_generar_pago_voluntario', '=', True),
-	# 		('state', 'in', ('activa', 'judicial', 'incobrable')),
-	# 		('pagos_360_solicitud_state', 'in', ('pending', 'expired')),
-	# 	])
-	# 	# No se obtienen las pagadas ya que el cobro no puede ser revertido, debido
-	# 	# a los medios de pago offline
-	# 	_logger.info('Chequear cobro voluntario por medio de pagos360')
-	# 	count = 0
-	# 	for _id in cuotas_ids:
-	# 		cuota_id = cuotas_obj.browse(cr, uid, _id)
-	# 		pagos_360_id = cuota_id.company_id.pagos_360_id
-	# 		request_result = cuota_id.pagos_360_actualizar_estado(True)
-	# 		pagos_360_solicitud_state = cuota_id.pagos_360_solicitud_state
-	# 		if cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'paid':
-	# 			superuser_id = self.pool.get('res.users').browse(cr, uid, 1)
-	# 			superuser_id.company_id = cuota_id.company_id.id
-	# 			journal_id = pagos_360_id.journal_id
-	# 			factura_electronica = pagos_360_id.factura_electronica
-	# 			payment_date = request_result['paid_at']
-	# 			amount = request_result['amount']
-	# 			# Si se desea hacer factura electronica esto puede traer problemas
-	# 			# dependiendo de la fecha de la utlima factura
-	# 			# Posible solucion es usar un punto de venta exclusivo
-	# 			invoice_date = request_result['paid_at']
-	# 			cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, invoice_date)
-	# 			pagos_360_id.actualizar_saldo()
-	# 		elif cuota_id.state in ('activa', 'judicial', 'incobrable') and pagos_360_solicitud_state == 'expired':
-	# 			cuota_id.pagos_360_renovar_solicitud(log_consola=True)
-	# 		elif cuota_id.state == 'cobrada' and pagos_360_solicitud_state == 'reverted':
-	# 			# Marcar diario con posibilidad de cancelar pagos => asientos
-	# 			# No se puede revertir pagos por medios de cobro off line
-	# 			pass
-	# 		count += 1
-	# 	_logger.info('Finalizo el chequeo: %s cuotas chequeadas', count)
-
 	@api.one
 	def button_actualizar_estado(self):
 		print("button_actualizar_estado")
