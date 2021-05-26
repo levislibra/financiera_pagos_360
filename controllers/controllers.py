@@ -12,6 +12,12 @@ class FinancieraPagos360WebhookController(http.Controller):
 		_logger.info('Pagos360: nuevo webhook.')
 		_logger.info('post:: ', post)
 		print("print post:: ", post)
+		if 'entity_name' in post.keys():
+			print("entity_name:: ", post.get('entity_name'))
+		if 'type' in post.keys():
+			print("type:: ", post.get('type'))
+		if 'entity_id' in post.keys():
+			print("entity_id:: ", post.get('entity_id'))
 		webhook_type = None
 		entity_id = None
 		if 'entity_name' in post.keys():
