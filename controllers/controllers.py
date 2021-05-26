@@ -7,7 +7,7 @@ import json
 _logger = logging.getLogger(__name__)
 class FinancieraPagos360WebhookController(http.Controller):
 
-	@http.route("/financiera.pagos.360/webhook", auth="public", csrf=False)
+	@http.route("/financiera.pagos.360/webhook", type='json', auth='none', cors='*', csrf=False)
 	def webhook_listener(self, **post):
 		_logger.info('Pagos360: nuevo webhook.')
 		_logger.info('post:: ', post)
