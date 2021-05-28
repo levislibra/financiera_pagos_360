@@ -67,6 +67,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		if self.state in ('activa', 'judicial', 'incobrable'):
 			solicitud_pago = self.pagos_360_obtener_solicitud_pago()
 			print("solicitud_pago:: ", solicitud_pago)
+			self.pagos_360_solicitud_state = solicitud_pago['state']
 			if self.state in ('activa', 'judicial', 'incobrable') and solicitud_pago['state'] == 'paid':
 				request_result = solicitud_pago['request_result'][0]
 				journal_id = pagos_360_id.journal_id
