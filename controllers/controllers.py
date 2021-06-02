@@ -22,6 +22,10 @@ class FinancieraPagos360WebhookController(http.Controller):
 		args = json.loads(request.httprequest.args)
 		print("print data:: ", data)
 		print("print args:: ", args)
+		_logger.info("///////////////////--")
+		_logger.info(data)
+		_logger.info(args)
+		_logger.info('////////////////////--')
 		if 'entity_name' in data.keys():
 			print("entity_name:: ", data.get('entity_name'))
 		if 'type' in data.keys():
