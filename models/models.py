@@ -61,17 +61,15 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	@api.one
 	def button_actualizar_estado(self):
 		print("button_actualizar_estado")
-		print("chequeamos")
 		pagos_360_id = self.company_id.pagos_360_id
-		print("self.state: ", self.state)
 		if self.state in ('activa', 'judicial', 'incobrable'):
 			solicitud_pago = self.pagos_360_obtener_solicitud_pago()
 			print("solicitud_pago:: ", solicitud_pago)
 			self.pagos_360_solicitud_state = solicitud_pago['state']
 			if self.state in ('activa', 'judicial', 'incobrable') and solicitud_pago['state'] == 'paid':
 				request_result = solicitud_pago['request_result'][0]
-				superuser_id = self.pool.get('res.users').browse(self.env.cr, self.env.uid, 1)
-				superuser_id.company_id = self.company_id.id
+				superuser_id = self.sudo().pool.get('res.users').browse(self.env.cr, self.env.uid, 1)
+				superuser_id.sudo().company_id = self.company_id.id
 				journal_id = pagos_360_id.journal_id
 				factura_electronica = pagos_360_id.factura_electronica
 				payment_date = request_result['paid_at']
