@@ -1,0 +1,38 @@
+<openerp>
+  <data>
+    <!-- Cuota inherit -->
+
+    <record id="cuota_form_inherited"  model="ir.ui.view">
+      <field name="name">Extension Prestamo Cuota Form</field>
+      <field name="model">financiera.prestamo.cuota</field>
+      <field name="inherit_id" ref="financiera_prestamos.financiera_prestamo_cuota_form"/>
+      <field name="arch" type="xml">        
+        <xpath expr="//page[4]" position='after'>
+          <page string="Pagos 360" attrs="{'invisible': [('pagos_360_generar_pago_voluntario', '=', False)]}">
+            <group>
+              <field name="pagos_360_generar_pago_voluntario" readonly="1"/>
+              <field name="pagos_360_solicitud_id" readonly="1"/>
+							<field name="pagos_360_solicitud_previa1_id" readonly="1"/>
+							<field name="pagos_360_solicitud_previa1_fecha" readonly="1"/>
+							<field name="pagos_360_solicitud_previa2_id" readonly="1"/>
+							<field name="pagos_360_solicitud_previa2_fecha" readonly="1"/>
+              <field name="pagos_360_solicitud_state" readonly="1"/>
+              <field name="pagos_360_first_due_date" readonly="1"/>
+              <field name="pagos_360_first_total" readonly="1"/>
+              <field name="pagos_360_second_due_date" readonly="1"/>
+              <field name="pagos_360_second_total" readonly="1"/>
+              <field name="pagos_360_barcode" readonly="1"/>
+              <field name="pagos_360_checkout_url" widget="url" readonly="1"/>
+              <field name="pagos_360_barcode_url" widget="url" readonly="1"/>
+              <field name="pagos_360_pdf_url" widget="url" readonly="1"/>
+              <label for="button_actualizar_estado"/><button name="button_actualizar_estado" string="Actualizar estado" type="object"/>
+              <label for="pagos_360_renovar_solicitud"/><button name="pagos_360_renovar_solicitud" string="Renovar Solicitud" type="object"/>
+              <label for="action_cupon_sent"/><button name="action_cupon_sent" string="Enviar cupon por Email" type="object" class="oe_highlight"/>
+            </group>
+          </page>
+        </xpath>
+      </field>
+    </record>
+
+  </data>
+</openerp>

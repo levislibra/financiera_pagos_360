@@ -1,43 +1,14 @@
  # -*- coding: utf-8 -*-
 
 from openerp import models, fields, api, _
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from openerp.exceptions import UserError, ValidationError
 import httplib
 import json
 import logging
-import base64
 _logger = logging.getLogger(__name__)
 
 WEBHOOK_DIR = "https://cloudlibrasoft.com/financiera.pagos.360/webhook"
-class FinancieraPagos360Cuenta(models.Model):
-	_name = 'financiera.pagos.360.cuenta'
-
-	name = fields.Char('Nombre')
-	company_id = fields.Many2one('res.company', 'Empresa', default=lambda self: self.env['res.company']._company_default_get('financiera.pagos.360.cuenta'))
-	api_key = fields.Text('API Key')
-	available_balance = fields.Float("Saldo Disponible")
-	unavailable_balance = fields.Float("Saldo Pendiente")
-
-	journal_id = fields.Many2one('account.journal', 'Diario de Cobro', domain="[('type', 'in', ('cash', 'bank'))]")
-	factura_electronica = fields.Boolean('Factura electronica')
-
-	set_default_payment = fields.Boolean("Marcar como medio de pago por defecto")
-	expire_create_new = fields.Boolean("Crear nueva Solicitud de Pago al expirar")
-	expire_days_payment = fields.Integer("Dias para pagar la nueva Solicitud de Pago", default=1)
-	expire_max_count_create = fields.Integer("Numero de renovaciones")
-	email_template_id = fields.Many2one('mail.template', 'Plantilla de envio de cuponera por mail')
-	report_name = fields.Char('Pdf adjunto en email')
-
-	@api.one
-	def actualizar_saldo(self):
-		conn = httplib.HTTPSConnection("api.pagos360.com")
-		headers = { 'authorization': "Bearer " + self.api_key }
-		conn.request("GET", "/account/balances", headers=headers)
-		res = conn.getresponse()
-		responseObject = json.loads(res.read())
-		self.available_balance = responseObject['available_balance']
-		self.unavailable_balance = responseObject['unavailable_balance']
 
 class ExtendsFinancieraPrestamoCuota(models.Model):
 	_inherit = 'financiera.prestamo.cuota' 
@@ -45,6 +16,11 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 
 	pagos_360_generar_pago_voluntario = fields.Boolean('Pagos360 - Generar cupon de pago voluntario')
 	pagos_360_solicitud_id = fields.Integer('Pagos360 - ID de la solicitud')
+	pagos_360_solicitud_previa1_id = fields.Integer('Pagos360 - ID de la solicitud previa 1')
+	pagos_360_solicitud_previa1_fecha = fields.Date('Pagos360 - Fecha de la solicitud previa 1')
+	pagos_360_solicitud_previa2_id = fields.Integer('Pagos360 - ID de la solicitud previa 2')
+	pagos_360_solicitud_previa2_fecha = fields.Date('Pagos360 - Fecha de la solicitud previa 2')
+	pagos_360_solicitud_id_origen_pago = fields.Integer('Pagos360 - ID de la solicitud de pago', readonly=1)
 	pagos_360_solicitud_state = fields.Selection([
 			('pending', 'Pendiente'), ('paid', 'Pagada'),
 			('expired', 'Expirada'), ('reverted', 'Revertida')],
@@ -66,6 +42,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			solicitud_pago = self.pagos_360_obtener_solicitud_pago()
 			print("solicitud_pago:: ", solicitud_pago)
 			self.pagos_360_solicitud_state = solicitud_pago['state']
+			self.pagos_360_solicitud_id_origen_pago = solicitud_pago['id']
 			if self.state in ('activa', 'judicial', 'incobrable') and solicitud_pago['state'] == 'paid':
 				request_result = solicitud_pago['request_result'][0]
 				superuser_id = self.sudo().pool.get('res.users').browse(self.env.cr, self.env.uid, 1)
@@ -91,7 +68,20 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		}
 		multi_cobro_id = self.env['financiera.prestamo.cuota.multi.cobro'].create(fpcmc_values)
 		partner_id.multi_cobro_ids = [multi_cobro_id.id]
-		self.punitorio_fecha_actual = payment_date
+		# Fijar fecha punitorio
+		solicitud_id = self.pagos_360_solicitud_id_origen_pago
+		if solicitud_id == self.pagos_360_solicitud_id:
+			if not self.pagos_360_solicitud_previa1_id:
+				self.punitorio_fecha_actual = payment_date
+			else:
+				self.punitorio_fecha_actual = self.pagos_360_solicitud_previa1_fecha
+		if solicitud_id == self.pagos_360_solicitud_previa1_id:
+			if not self.pagos_360_solicitud_previa2_id:
+				self.punitorio_fecha_actual = payment_date
+			else:
+				self.punitorio_fecha_actual = self.pagos_360_solicitud_previa2_fecha
+		if solicitud_id == self.pagos_360_solicitud_previa2_id:
+			self.punitorio_fecha_actual = payment_date
 		if self.saldo > 0:
 			self.confirmar_cobrar_cuota(payment_date, journal_id, amount, multi_cobro_id)
 		# Facturacion cuota
@@ -196,6 +186,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 
 	@api.one
 	def pagos_360_renovar_solicitud(self):
+		self.button_actualizar_estado()
 		fecha_vencimiento = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d") or False
 		if (self.pagos_360_solicitud_state == 'expired' or self.pagos_360_solicitud_id == 0) and (fecha_vencimiento == False or fecha_vencimiento < datetime.now()):
 			conn = httplib.HTTPSConnection("api.pagos360.com")
@@ -233,6 +224,12 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		if 'error' in data.keys():
 			_logger.error(data['error']['message'])
 		if 'id' in data.keys():
+			if self.pagos_360_solicitud_previa1_id > 0:
+				self.pagos_360_solicitud_previa2_id = self.pagos_360_solicitud_previa1_id
+				self.pagos_360_solicitud_previa2_fecha = self.pagos_360_solicitud_previa1_fecha
+			if self.pagos_360_solicitud_id > 0:
+				self.pagos_360_solicitud_previa1_id = self.pagos_360_solicitud_id
+				self.pagos_360_solicitud_previa1_fecha = date.today()
 			self.pagos_360_solicitud_id = data['id']
 		if 'state' in data.keys():
 			self.pagos_360_solicitud_state = data['state']
@@ -282,140 +279,3 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			'context': ctx,
 		}
 
-
-class ExtendsFinancieraPrestamo(models.Model):
-	_inherit = 'financiera.prestamo' 
-	_name = 'financiera.prestamo'
-
-	pagos_360 = fields.Boolean('Pagos360 - Pago voluntario', compute='_compute_pagos_360')
-	pagos360_pago_voluntario = fields.Boolean('Pagos360 - Pago Voluntario')
-	pagos_360_cupon_sent = fields.Boolean('Pagos360 - Cupon enviado por mail', default=False)
-	# pagos_360_cupon_generado_cuotas = fields.Boolean('Pagos360 - Cupon no generado en todas las cuotas', compute='_compute_pagos_360_cupon_cuotas')
-
-	@api.model
-	def default_get(self, fields):
-		rec = super(ExtendsFinancieraPrestamo, self).default_get(fields)
-		if len(self.env.user.company_id.pagos_360_id) > 0:
-			rec.update({
-				'pagos360_pago_voluntario': self.env.user.company_id.pagos_360_id.set_default_payment,
-			})
-		return rec
-
-	@api.one
-	def crear_solicitudes_pagos_360(self):
-		for cuota_id in self.cuota_ids:
-			if self.pagos360_pago_voluntario:
-				cuota_id.pagos_360_crear_solicitud()
-
-	@api.one
-	def enviar_a_acreditacion_pendiente(self):
-		super(ExtendsFinancieraPrestamo, self).enviar_a_acreditacion_pendiente()
-		self.crear_solicitudes_pagos_360()
-
-	@api.one
-	def _compute_pagos_360(self):
-		self.pagos_360 = self.company_id.pagos_360
-
-	# @api.one
-	# def _compute_pagos_360_cupon_generado_cuotas(self):
-	# 	ret = False
-	# 	for cuota_id in self.cuota_ids:
-	# 		if cuota_id.pagos_360_generar_pago_voluntario:
-	# 			ret = True
-	# 			break
-	# 	self.pagos_360_cupon_generado_cuotas = ret
-
-	@api.multi
-	def action_cupon_sent(self):
-		""" Open a window to compose an email, with the edi payment template
-			message loaded by default
-		"""
-		self.ensure_one()
-		# template = self.env.ref('financiera_pagos_360.email_template_payment', False)
-		pagos_360_id = self.company_id.pagos_360_id
-		template = pagos_360_id.email_template_id
-		compose_form = self.env.ref('mail.email_compose_message_wizard_form', False)
-		report_name = pagos_360_id.report_name
-		pdf = self.pool['report'].get_pdf(self._cr, self._uid, [self.id], report_name, context=None)
-		new_attachment_id = self.env['ir.attachment'].create({
-			'name': 'Cuponera ' + self.display_name + '.pdf',
-			'datas_fname': 'Cuponera ' + self.display_name + '.pdf',
-			'type': 'binary',
-			'datas': base64.encodestring(pdf),
-			'res_model': 'financiera.prestamo',
-			'res_id': self.id,
-			'mimetype': 'application/x-pdf',
-		})
-		ctx = dict(
-			default_model='financiera.prestamo',
-			default_res_id=self.id,
-			default_use_template=bool(template),
-			default_template_id=template and template.id or False,
-			default_composition_mode='comment',
-			default_attachment_ids=[new_attachment_id.id],
-			sub_action='cupon_sent',
-		)
-		return {
-			'name': _('Compose Email'),
-			'type': 'ir.actions.act_window',
-			'view_type': 'form',
-			'view_mode': 'form',
-			'res_model': 'mail.compose.message',
-			'views': [(compose_form.id, 'form')],
-			'view_id': compose_form.id,
-			'target': 'new',
-			'context': ctx,
-		}
-
-	@api.one
-	def enviar_email_cuponera_prestamo(self):
-		if len(self.company_id.pagos_360_id) > 0:
-			pagos_360_id = self.company_id.pagos_360_id
-			if len(pagos_360_id.email_template_id) > 0:
-				template = pagos_360_id.email_template_id
-				report_name = pagos_360_id.report_name
-				if report_name:
-					pdf = self.pool['report'].get_pdf(self._cr, self._uid, [self.id], report_name, context=None)
-					new_attachment_id = self.env['ir.attachment'].create({
-						'name': 'Cuponera ' + self.display_name+'.pdf',
-						'datas_fname': 'Cuponera ' + self.display_name+'.pdf',
-						'type': 'binary',
-						'datas': base64.encodestring(pdf),
-						'res_model': 'financiera.prestamo',
-						'res_id': self.id,
-						'mimetype': 'application/x-pdf',
-					})
-					template.attachment_ids = [(6, 0, [new_attachment_id.id])]
-				# context = self.env.context.copy()
-				template.send_mail(self.id, raise_exception=False, force_send=True)
-
-	@api.multi
-	def cuponera_de_pagos_report(self):
-		self.ensure_one()
-		pagos_360_id = self.company_id.pagos_360_id
-		if len(pagos_360_id) > 0 and pagos_360_id.report_name:
-			return self.env['report'].get_action(self, pagos_360_id.report_name)
-		else:
-			raise UserError("Reporte de cuponera no configurado.")
-
-class ExtendsMailMail(models.Model):
-	_name = 'mail.mail'
-	_inherit = 'mail.mail'
-
-	@api.one
-	def send(self, auto_commit=False, raise_exception=False):
-		context = dict(self._context or {})
-		active_model = context.get('active_model')
-		sub_action = context.get('sub_action')
-		active_id = context.get('active_id')
-		if active_model == 'financiera.prestamo' and sub_action == 'cupon_sent':
-			cr = self.env.cr
-			uid = self.env.uid
-			prestamo_obj = self.pool.get('financiera.prestamo')
-			prestamo_id = prestamo_obj.browse(cr, uid, active_id)
-			prestamo_id.pagos_360_cupon_sent = True
-			self.company_id = prestamo_id.company_id.id
-			prestamo_id.email_ids = [self.id]
-			self.tipo = 'Pagos360 - Cuponera'
-			self.auto_delete = False
-		res = super(ExtendsMailMail, self).send(auto_commit=False, raise_exception=False)

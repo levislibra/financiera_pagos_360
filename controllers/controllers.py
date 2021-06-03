@@ -10,24 +10,19 @@ class FinancieraPagos360WebhookController(http.Controller):
 	@http.route("/financiera.pagos.360/webhook", type='json', auth='none', cors='*', csrf=False)
 	def webhook_listener(self, **post):
 		_logger.info('Pagos360: nuevo webhook.')
-		_logger.info("jsonrequest///////////////////--")
 		_logger.info(request.jsonrequest)
 		data = request.jsonrequest
-		_logger.info(data)
-		_logger.info('////////////////')
-		if 'entity_name' in data.keys():
-			_logger.info(data.get('entity_name'))
-		if 'type' in data.keys():
-			_logger.info(data.get('type'))
-		if 'entity_id' in data.keys():
-			_logger.info(data.get('entity_id'))
 		webhook_type = None
 		entity_id = None
 		if 'entity_name' in data.keys():
 			# Obtener type
 			webhook_type = data.get('type')
 			entity_id = data.get('entity_id')
-			_id = request.env['financiera.prestamo.cuota'].sudo().search([('pagos_360_solicitud_id','=', int(entity_id))])
+			_id = request.env['financiera.prestamo.cuota'].sudo().search([
+				'|', ('pagos_360_solicitud_id','=', int(entity_id)),
+				'|', ('pagos_360_solicitud_previa1_id','=', int(entity_id)),
+				('pagos_360_solicitud_previa2_id','=', int(entity_id)),
+			])
 			if _id and len(_id) > 0:
 				cuota_id = request.env['financiera.prestamo.cuota'].sudo().browse(int(_id[0]))
 				_logger.info("CUOTA:: ", cuota_id)

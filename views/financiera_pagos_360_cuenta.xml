@@ -1,0 +1,73 @@
+<openerp>
+	<data>
+		<!-- configuracion tree -->
+    
+    <record model="ir.ui.view" id="cuenta_tree">
+      <field name="name">financiera.pagos.360.cuenta tree</field>
+      <field name="model">financiera.pagos.360.cuenta</field>
+      <field name="arch" type="xml">
+        <tree create="false" delete="false">
+          <field name="name"/>
+          <field name="available_balance"/>
+          <field name="unavailable_balance"/>
+          <field name="company_id" groups="base.group_erp_manager"/>
+        </tree>
+      </field>
+    </record>
+
+    <record model="ir.ui.view" id="cuenta_form">
+      <field name="name">financiera.pagos.360.cuenta form</field>
+      <field name="model">financiera.pagos.360.cuenta</field>
+      <field name="arch" type="xml">
+        <form create="false" delete="false">
+          <header>
+            <button name="actualizar_saldo" string="Actualizar Saldo" type="object" class="oe_highlight"/>
+          </header>
+          <sheet>
+						<group>
+							<field name="company_id" groups="base.group_erp_manager"/>
+							<field name="name"/>
+							<field name="api_key" required="1"/>
+						</group>
+            <group>
+              <group string="Saldos">
+                <field name="available_balance"/>
+                <field name="unavailable_balance"/>
+              </group>
+              <group string="Opciones Solicitudes de Pago">
+								<field name="set_default_payment"/>
+                <field name="expire_create_new"/>
+                <field name="expire_days_payment"/>
+                <field name="expire_max_count_create"/>
+              </group>
+              <group string="Cobro y Facturacion">
+                <field name="journal_id" required="1"/>
+                <field name="factura_electronica"/>
+              </group>
+              <group string="Email y reporte">
+                <field name="email_template_id"/>
+                <field name="report_name"/>
+              </group>
+            </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="cuenta_action">
+      <field name="name">Configuracion</field>
+      <field name="res_model">financiera.pagos.360.cuenta</field>
+      <field name="view_mode">tree,form</field>
+      <!-- <field name="context">{'search_default_pendientes':0}</field> -->
+      <field name="view_ids" eval="[(5, 0, 0), 
+        (0, 0, {'view_mode': 'tree', 'view_id': ref('cuenta_tree')}), 
+        (0, 0, {'view_mode': 'form', 'view_id': ref('cuenta_form')})]"/>
+    </record>
+	
+    <!-- Top menu item -->
+    
+    <menuitem name="Pagos 360" id="menu_pagos_360" web_icon="financiera_pagos_360,static/description/icon.png" groups="financiera_pagos_360.manager"/>
+    <menuitem name="Cuenta" id="menu_cuenta_action" parent="menu_pagos_360" action="cuenta_action" sequence="0"/>
+
+	</data>
+</openerp>

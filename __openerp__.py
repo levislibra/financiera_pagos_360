@@ -27,10 +27,11 @@
         'security/user_groups.xml',
         'security/ir.model.access.csv',
         'security/security.xml',
-        'views/views.xml',
+        'views/extends_financiera_prestamo_cuota.xml',
+				'views/extends_financiera_prestamo.xml',
         'views/extends_res_company.xml',
+				'views/financiera_pagos_360_cuenta.xml',
         'views/generic_reports.xml',
-        # 'data/ir_cron.xml',
         'data/cupon_action_data.xml',
     ],
     # only loaded in demonstration mode
