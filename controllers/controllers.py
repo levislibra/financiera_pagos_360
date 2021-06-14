@@ -25,9 +25,8 @@ class FinancieraPagos360WebhookController(http.Controller):
 			])
 			if _id and len(_id) > 0:
 				cuota_id = request.env['financiera.prestamo.cuota'].sudo().browse(int(_id[0]))
-				_logger.info("CUOTA:: ", cuota_id)
-				_logger.info("CUOTA.saldo:: ", cuota_id.saldo)
-				_logger.info('Pagos360: tipo '+data.get('type'))
+				_logger.info("Pagos360: cuota id %s" % str(cuota_id.id))
+				_logger.info("Pagos360: webhook tipo %s" % webhook_type)
 				if webhook_type == "paid":
 					# Cobrar y facturar
 					cuota_id.button_actualizar_estado()
