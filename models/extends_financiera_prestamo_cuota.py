@@ -1,4 +1,4 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from openerp import models, fields, api, _
 from datetime import datetime, timedelta, date
@@ -33,6 +33,12 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 	pagos_360_checkout_url = fields.Char('Pagos360 - Url de pago online')
 	pagos_360_barcode_url = fields.Char('Pagos360 - Url imagen del codigo de barras')
 	pagos_360_pdf_url = fields.Char('Pagos360 - Url de cupon de pago en pdf')
+
+	@api.multi
+	def button_actualizar_estado_cupon(self):
+		print("cobranza_actualizar_estado_cupon")
+		self.button_actualizar_estado()
+		return {'type': 'ir.actions.do_nothing'}
 
 	@api.one
 	def button_actualizar_estado(self):
@@ -183,6 +189,10 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		data = json.loads(res.read().decode("utf-8"))
 		self.procesar_respuesta(data)
 
+ 	@api.multi
+ 	def button_renovar_solicitud_cupon(self):
+	 	self.pagos_360_renovar_solicitud()
+	 	return {'type': 'ir.actions.do_nothing'}
 
 	@api.one
 	def pagos_360_renovar_solicitud(self):
