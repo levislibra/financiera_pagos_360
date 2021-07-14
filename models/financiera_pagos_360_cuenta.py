@@ -26,7 +26,8 @@ class FinancieraPagos360Cuenta(models.Model):
 	expire_create_new = fields.Boolean("Crear nueva Solicitud de Pago al expirar")
 	expire_days_payment = fields.Integer("Dias para pagar la nueva Solicitud de Pago", default=1)
 	expire_max_count_create = fields.Integer("Numero de renovaciones")
-	email_template_id = fields.Many2one('mail.template', 'Plantilla de envio de cuponera por mail')
+	email_template_id = fields.Many2one('mail.template', 'Plantilla de cuponera')
+	email_template_renovacion_cuota_id = fields.Many2one('mail.template', 'Plantilla de renovacion cuota')
 	report_name = fields.Char('Pdf adjunto en email')
 
 	@api.one

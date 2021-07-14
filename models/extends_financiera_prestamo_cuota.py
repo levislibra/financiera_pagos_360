@@ -266,7 +266,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			message loaded by default
 		"""
 		self.ensure_one()
-		template = self.env.ref('financiera_pagos_360.email_template_edi_cupon', False)
+		template = self.company_id.pagos_360_id.email_template_renovacion_cuota_id
 		compose_form = self.env.ref('mail.email_compose_message_wizard_form', False)
 		ctx = dict(
 			default_model='financiera.prestamo.cuota',

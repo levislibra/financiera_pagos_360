@@ -46,6 +46,7 @@
               </group>
               <group string="Email y reporte">
                 <field name="email_template_id"/>
+								<field name="email_template_renovacion_cuota_id"/>
                 <field name="report_name"/>
               </group>
             </group>
