@@ -23,9 +23,9 @@
 					<group string="Pagos 360 - Cupon de pago voluntario">
 						<field name="pagos_360_cupon_sent" readonly="1"/>
 						<label for="crear_solicitudes_pagos_360" string=" " 
-							attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), ('state', 'not in', ('acreditacion_pendiente', 'acreditado'))]}"/>
+							attrs="{'invisible': [('pagos360_pago_voluntario', '=', False)]}"/>
 						<button name="crear_solicitudes_pagos_360" string="Crear cupones de pago" type="object" 
-							attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), ('state', 'not in', ('acreditacion_pendiente', 'acreditado'))]}"
+							attrs="{'invisible': [('pagos360_pago_voluntario', '=', False)]}"
 							confirm="Esta seguro que desea generar una nueva cuponera de pagos? Si existe una cuponera ya generada sobre este prestamo, sera descartada. Esta accion es irreversible!"/>
 					</group>
         </xpath>
