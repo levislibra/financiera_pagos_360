@@ -50,6 +50,8 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			self.pagos_360_solicitud_state = solicitud_pago['state']
 			self.pagos_360_solicitud_id_origen_pago = solicitud_pago['id']
 			if self.state in ('activa', 'judicial', 'incobrable') and solicitud_pago['state'] == 'paid':
+				# Esto esta mail - si un cliente paga dos veces el mismo codigo de barra con distintos importes, cargara solo el 
+				# primer pago dos veces
 				request_result = solicitud_pago['request_result'][0]
 				superuser_id = self.sudo().pool.get('res.users').browse(self.env.cr, self.env.uid, 1)
 				superuser_id.sudo().company_id = self.company_id.id
@@ -98,6 +100,8 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			}
 			multi_factura_id = self.env['financiera.prestamo.cuota.multi.factura'].create(fpcmf_values)
 			self.facturar_cuota(invoice_date, factura_electronica, multi_factura_id, multi_cobro_id)
+			if multi_factura_id.invoice_amount == 0:
+				multi_factura_id.unlink()
 		multi_factura_punitorio_id = None
 		if self.punitorio_a_facturar > 0:
 			fpcmf_values = {
@@ -106,10 +110,8 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			}
 			multi_factura_punitorio_id = self.env['financiera.prestamo.cuota.multi.factura'].create(fpcmf_values)
 			self.facturar_punitorio_cuota(invoice_date, factura_electronica, multi_factura_punitorio_id, multi_cobro_id)
-		if multi_factura_id.invoice_amount == 0:
-			multi_factura_id.unlink()
-		if multi_factura_punitorio_id != None and multi_factura_punitorio_id.invoice_amount == 0:
-			multi_factura_punitorio_id.unlink()
+			if multi_factura_punitorio_id != None and multi_factura_punitorio_id.invoice_amount == 0:
+				multi_factura_punitorio_id.unlink()
 
 
 	def pagos_360_obtener_solicitud_pago(self):
