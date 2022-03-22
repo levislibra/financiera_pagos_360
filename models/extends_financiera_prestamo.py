@@ -35,7 +35,10 @@ class ExtendsFinancieraPrestamo(models.Model):
 	@api.one
 	def enviar_a_acreditacion_pendiente(self):
 		super(ExtendsFinancieraPrestamo, self).enviar_a_acreditacion_pendiente()
-		self.crear_solicitudes_pagos_360()
+		if self.cuota_ids and self.cuota_ids[0].pagos_360_solicitud_id == 0:
+			self.crear_solicitudes_pagos_360()
+		else:
+			print("Acreditaicon pendiente: cupon ya generado!")
 
 	@api.one
 	def _compute_pagos_360(self):
