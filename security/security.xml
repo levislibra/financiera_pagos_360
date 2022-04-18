@@ -10,5 +10,5 @@
             [('company_id','child_of',[user.company_id.id])]</field>
         </record>
 
-    <!-- </data> '|', ('comercio_id', '=', False),  -->
+    <!-- </data> -->
 </openerp>

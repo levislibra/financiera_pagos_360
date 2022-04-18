@@ -158,7 +158,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		# segundo vencimiento
 		if self.segunda_fecha_vencimiento != False:
 			segunda_fecha_vencimiento = datetime.strptime(self.segunda_fecha_vencimiento, "%Y-%m-%d")
-		if  self.segunda_fecha_vencimiento != False and segunda_fecha_vencimiento >= datetime.now() and self.total_segunda_fecha >= self.total:
+		if  self.segunda_fecha_vencimiento != False and segunda_fecha_vencimiento >= datetime.now() and self.total_segunda_fecha >= self.saldo:
 			segunda_fecha_vencimiento = str(segunda_fecha_vencimiento.day).zfill(2)+"-"+str(segunda_fecha_vencimiento.month).zfill(2)+"-"+str(segunda_fecha_vencimiento.year)
 			payload = """{\
 				"payment_request":{\
@@ -170,7 +170,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 					"second_due_date":"%s",\
 					"second_total":%s\
 				}\
-			}""" % (self.name, self.id, self.normalize(self.partner_id.name), fecha_vencimiento, self.total, segunda_fecha_vencimiento, self.total_segunda_fecha)
+			}""" % (self.name, self.id, self.normalize(self.partner_id.name), fecha_vencimiento, self.saldo, segunda_fecha_vencimiento, self.total_segunda_fecha)
 		else:
 			payload = """{\
 				"payment_request":{\
@@ -180,7 +180,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 					"first_due_date":"%s",\
 					"first_total":%s\
 				}\
-			}""" % (self.name, self.id, self.normalize(self.partner_id.name), fecha_vencimiento, self.total)
+			}""" % (self.name, self.id, self.normalize(self.partner_id.name), fecha_vencimiento, self.saldo)
 		self.pagos_360_generar_pago_voluntario = True
 		headers = {
 			'content-type': "application/json",
@@ -191,10 +191,10 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		data = json.loads(res.read().decode("utf-8"))
 		self.procesar_respuesta(data)
 
- 	@api.multi
- 	def button_renovar_solicitud_cupon(self):
-	 	self.pagos_360_renovar_solicitud()
-	 	return {'type': 'ir.actions.do_nothing'}
+	@api.multi
+	def button_renovar_solicitud_cupon(self):
+		self.pagos_360_renovar_solicitud()
+		return {'type': 'ir.actions.do_nothing'}
 
 	@api.one
 	def pagos_360_renovar_solicitud(self):
@@ -217,7 +217,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 						"first_due_date": "%s",\
 						"first_total": %s\
 					}\
-				}""" % (self.name, self.id, self.normalize(self.partner_id.name), fecha_vencimiento, self.total)
+				}""" % (self.name, self.id, self.normalize(self.partner_id.name), fecha_vencimiento, self.saldo)
 			self.pagos_360_generar_pago_voluntario = True
 			headers = {
 				'content-type': "application/json",
