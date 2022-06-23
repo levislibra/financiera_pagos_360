@@ -3,10 +3,7 @@
 from openerp import models, fields, api, _
 from datetime import datetime, timedelta
 from openerp.exceptions import UserError, ValidationError
-import logging
 import base64
-
-WEBHOOK_DIR = "https://cloudlibrasoft.com/financiera.pagos.360/webhook"
 
 class ExtendsFinancieraPrestamo(models.Model):
 	_inherit = 'financiera.prestamo' 
@@ -15,6 +12,7 @@ class ExtendsFinancieraPrestamo(models.Model):
 	pagos_360 = fields.Boolean('Pagos360 - Pago voluntario', compute='_compute_pagos_360')
 	pagos360_pago_voluntario = fields.Boolean('Pagos360 - Pago Voluntario')
 	pagos_360_cupon_sent = fields.Boolean('Pagos360 - Cupon enviado por mail', default=False)
+	solicitud_ids = fields.One2many('financiera.pagos360.solicitud', 'prestamo_id', 'Solicitudes de Pago')
 	# pagos_360_cupon_generado_cuotas = fields.Boolean('Pagos360 - Cupon no generado en todas las cuotas', compute='_compute_pagos_360_cupon_cuotas')
 
 	@api.model
@@ -35,10 +33,7 @@ class ExtendsFinancieraPrestamo(models.Model):
 	@api.one
 	def enviar_a_acreditacion_pendiente(self):
 		super(ExtendsFinancieraPrestamo, self).enviar_a_acreditacion_pendiente()
-		if self.cuota_ids and self.cuota_ids[0].pagos_360_solicitud_id == 0:
-			self.crear_solicitudes_pagos_360()
-		else:
-			print("Acreditaicon pendiente: cupon ya generado!")
+		self.crear_solicitudes_pagos_360()
 
 	@api.one
 	def _compute_pagos_360(self):

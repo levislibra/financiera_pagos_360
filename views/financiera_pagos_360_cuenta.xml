@@ -67,8 +67,8 @@
 	
     <!-- Top menu item -->
     
-    <menuitem name="Pagos 360" id="menu_pagos_360" web_icon="financiera_pagos_360,static/description/icon.png" groups="financiera_pagos_360.manager"/>
-    <menuitem name="Cuenta" id="menu_cuenta_action" parent="menu_pagos_360" action="cuenta_action" sequence="0"/>
+    <menuitem name="Pagos 360" id="menu_pagos_360" web_icon="financiera_pagos_360,static/description/icon.png" groups="financiera_pagos_360.user"/>
+    <menuitem name="Cuenta" id="menu_cuenta_action" parent="menu_pagos_360" action="cuenta_action" sequence="100" groups="financiera_pagos_360.manager"/>
 
 	</data>
 </openerp>

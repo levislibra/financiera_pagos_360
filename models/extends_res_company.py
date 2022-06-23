@@ -2,7 +2,6 @@
 
 from openerp import models, fields, api
 
-
 class ExtendsResCompany(models.Model):
 	_name = 'res.company'
 	_inherit = 'res.company'

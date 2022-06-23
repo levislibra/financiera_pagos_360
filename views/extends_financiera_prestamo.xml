@@ -19,15 +19,35 @@
           <button name="action_cupon_sent" class="oe_highlight" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', True)]}"/>
 					<button name="action_cupon_sent" string="Enviar cupon por mail" type="object" attrs="{'invisible': ['|', ('pagos360_pago_voluntario', '=', False), '|', ('state', 'not in', ('acreditacion_pendiente', 'acreditado')), ('pagos_360_cupon_sent', '=', False)]}"/>
         </xpath>
-        <xpath expr="//group[@name='notificaciones']" position='after'>
-					<group string="Pagos 360 - Cupon de pago voluntario">
-						<field name="pagos_360_cupon_sent" readonly="1"/>
-						<label for="crear_solicitudes_pagos_360" string=" " 
-							attrs="{'invisible': [('pagos360_pago_voluntario', '=', False)]}"/>
-						<button name="crear_solicitudes_pagos_360" string="Crear cupones de pago" type="object" 
-							attrs="{'invisible': [('pagos360_pago_voluntario', '=', False)]}"
-							confirm="Esta seguro que desea generar una nueva cuponera de pagos? Si existe una cuponera ya generada sobre este prestamo, sera descartada. Esta accion es irreversible!"/>
-					</group>
+        <xpath expr="//page[@name='otra_informacion']" position='before'>
+					<page name="pagos360" string="Pagos 360">
+						<group>
+							<group string="Pagos 360 - Cupon de pago voluntario">
+								<field name="pagos_360_cupon_sent" readonly="1"/>
+								<label for="crear_solicitudes_pagos_360" string=" " 
+									attrs="{'invisible': [('pagos360_pago_voluntario', '=', False)]}"/>
+								<button name="crear_solicitudes_pagos_360" string="Crear cupones de pago" type="object" 
+									attrs="{'invisible': [('pagos360_pago_voluntario', '=', False)]}"
+									confirm="Esta seguro que desea generar una nueva cuponera de pagos? Si existe una cuponera ya generada sobre este prestamo, sera descartada. Esta accion es irreversible!"/>
+								<field name='solicitud_ids'>
+									<tree>
+										<field name="create_date" string="Creado el" readonly="1"/>
+										<field name="cuota_id" readonly="1"/>
+										<field name="pagos_360_solicitud_id" readonly="1"/>
+										<field name="pagos_360_first_due_date" readonly="1"/>
+										<field name="pagos_360_first_total" readonly="1"/>
+										<field name="pagos_360_second_due_date" readonly="1"/>
+										<field name="pagos_360_second_total" readonly="1"/>
+										<field name="pagos_360_checkout_url" widget="url" readonly="1"/>
+										<field name="pagos_360_pdf_url" widget="url" readonly="1"/>
+										<field name="pagos_360_solicitud_state" readonly="1"/>
+										<button name="actualizar_solicitud" string="Actualizar" type="object" class="oe_highlight"/>
+									</tree>
+								</field>
+							</group>
+						</group>
+						<group></group>
+					</page>
         </xpath>
       </field>
     </record>

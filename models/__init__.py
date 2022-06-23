@@ -5,3 +5,4 @@ from . import extends_financiera_prestamo
 from . import extends_mail_mail
 from . import extends_res_company
 from . import financiera_pagos_360_cuenta
+from . import financiera_pagos360_solicitud

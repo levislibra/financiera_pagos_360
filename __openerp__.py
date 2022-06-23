@@ -31,8 +31,10 @@
 				'views/extends_financiera_prestamo.xml',
         'views/extends_res_company.xml',
 				'views/financiera_pagos_360_cuenta.xml',
+				'views/financiera_pagos360_solicitud.xml',
         'views/generic_reports.xml',
         'data/cupon_action_data.xml',
+				'data/ir_cron.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

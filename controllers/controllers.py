@@ -18,23 +18,21 @@ class FinancieraPagos360WebhookController(http.Controller):
 			# Obtener type
 			webhook_type = data.get('type')
 			entity_id = data.get('entity_id')
-			_id = request.env['financiera.prestamo.cuota'].sudo().search([
-				'|', ('pagos_360_solicitud_id','=', int(entity_id)),
-				'|', ('pagos_360_solicitud_previa1_id','=', int(entity_id)),
-				('pagos_360_solicitud_previa2_id','=', int(entity_id)),
+			_id = request.env['financiera.pagos360.solicitud'].sudo().search([
+				('pagos_360_solicitud_id','=', int(entity_id)),
 			])
 			if _id and len(_id) > 0:
-				cuota_id = request.env['financiera.prestamo.cuota'].sudo().browse(int(_id[0]))
-				_logger.info("Pagos360: cuota id %s" % str(cuota_id.id))
+				solicitud_id = request.env['financiera.pagos360.solicitud'].sudo().browse(int(_id[0]))
+				_logger.info("Pagos360: solicitud id %s" % str(solicitud_id.pagos_360_solicitud_id))
 				_logger.info("Pagos360: webhook tipo %s" % webhook_type)
 				if webhook_type == "paid":
 					# Cobrar y facturar
-					cuota_id.button_actualizar_estado()
+					solicitud_id.actualizar_solicitud()
 					_logger.info('Pagos360: nuevo pago procesado.')
-				# elif webhook_type == "expired":
-				# 	# Renovar
-				# 	cuota_id.cuota_id.pagos_360_renovar_solicitud()
-				# 	_logger.info('Pagos360: expiro Cupon de Pago.')
+				elif webhook_type == "expired":
+					# Renovar
+					solicitud_id.actualizar_solicitud()
+					_logger.info('Pagos360: expiro Cupon de Pago.')
 			else:
-				_logger.warning('Pagos360: No existe referencia de la cuota.')
+				_logger.warning('Pagos360: No existe referencia de la solicitud.')
 		return json.dumps("OK")

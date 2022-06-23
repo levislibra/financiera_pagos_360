@@ -2,13 +2,19 @@
 <openerp>
     <!-- <data noupdate="1"> -->
 
-        <record id="financiera_pagos_360_comp_rule" model="ir.rule">
-            <field name="name">Financiera Pagos 360 Cuenta multi-company</field>
-            <field name="model_id" ref="financiera_pagos_360.model_financiera_pagos_360_cuenta"/>
-            <!-- <field name="groups" eval="[(4, ref('financiera_base.user'))]"/> -->
-            <field name="domain_force">
-            [('company_id','child_of',[user.company_id.id])]</field>
-        </record>
+				<record id="financiera_pagos_360_comp_rule" model="ir.rule">
+						<field name="name">Financiera Pagos 360 Cuenta multi-company</field>
+						<field name="model_id" ref="financiera_pagos_360.model_financiera_pagos_360_cuenta"/>
+						<field name="domain_force">
+						[('company_id','child_of',[user.company_id.id])]</field>
+				</record>
+
+				<record id="financiera_pagos360_solicitud_rule" model="ir.rule">
+					<field name="name">Financiera Pagos 360 Solicitud multi-company</field>
+					<field name="model_id" ref="financiera_pagos_360.model_financiera_pagos360_solicitud"/>
+					<field name="domain_force">
+					[('company_id','child_of',[user.company_id.id])]</field>
+				</record>
 
     <!-- </data> -->
 </openerp>

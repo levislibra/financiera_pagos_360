@@ -3,120 +3,212 @@
 <openerp>
 <data>
 
-    <report 
-        id="prestamo_cupon_de_pago_report"
-        model="financiera.prestamo"
-        string="Cupon de Pago Generico"
-        report_type="qweb-pdf"
-        name="financiera_pagos_360.cupon_de_pago_report_view"
-        attachment_use="True"
-        file="financiera_pagos_360.cupon_de_pago_report_view"
-    />
+	<report 
+		id="prestamo_cupon_de_pago_report"
+		model="financiera.prestamo"
+		string="Cupon de Pago Generico"
+		report_type="qweb-pdf"
+		name="financiera_pagos_360.cupon_de_pago_report_view"
+		attachment_use="True"
+		file="financiera_pagos_360.cupon_de_pago_report_view"
+	/>
 
-    <template id="cupon_de_pago_report_view">
-        <t t-call="report.external_layout">
-            <t t-foreach="docs" t-as="o">
-                <div class="page" style="font-size:16px;">
-                    <div align="center" style="font-size:16px;">
-                        <h1>Cupones de pago</h1>
-                        <p>Medios de pagos habilitados</p>
-                        <img t-att-src="'/financiera_pagos_360/static/description/logos_medios_de_pago.png'" align="center"/>
-                    </div>
-                    <table class="table table-hover table-striped">
-                        <thead>
-                            <tr>
-                                <th>Titular del Prestamo</th>
-                                <th>Identificación principal</th>
-                                <th>Prestamo</th>
-                            </tr>
-                        </thead>
-                        <tbody class="invoice_tbody">
-                            <tr>
-                                <td><span t-field="o.partner_id.name"/></td>
-                                <td><span t-field="o.partner_id.main_id_category_id"/> - <span t-field="o.partner_id.main_id_number"/></td>
-                                <td><span t-field="o.name"/></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <table class="table table-condensed">
-                        <thead>
-                            <tr>
-                                <th style="width:5%;"></th>
-                                <th style="width:40%;"></th>
-                                <th style="width:55%;"></th>
-                            </tr>
-                        </thead>
-                        <tbody class="invoice_tbody">
-                            <tr t-foreach="o.cuota_ids" t-as="l">
-                                <td style="width:15%;"><span t-field="l.numero_cuota"/></td>
-                                <td style="width:15%;">
-                                    <table class="table table-hover o_my_status_table">
-                                        <thead align="center">
-                                            <tr>
-                                                <td>CUPÓN DE PAGO</td>
-                                            </tr>
-                                            <tr>
-                                                <td><b><span t-field="l.partner_id"/></b></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Referencia: <b><span t-field="l.id"/></b></td>
-                                            </tr>
-                                        </thead>
-                                    </table>
-                                </td>
-                                <td style="width:15%;">
-                                    <table class="table table-hover o_my_status_table">
-                                        <thead align="center">
-                                            <tr>
-                                                <td>Primer Vencimiento</td>
-                                                <td><span t-field="l.pagos_360_first_due_date" t-field-options='{"format": "dd/MM/yyyy"}'/></td>
-                                                <td>$<span t-field="l.pagos_360_first_total"/></td>
-                                            </tr>
-                                            <span t-if="l.pagos_360_second_due_date">
-                                                <tr>
-                                                    <td>Segundo Vencimiento</td>
-                                                    <td><span t-field="l.pagos_360_second_due_date" t-field-options='{"format": "dd/MM/yyyy"}'/></td>
-                                                    <td>$<span t-field="l.pagos_360_second_total"/></td>
-                                                </tr>
-                                            </span>
-                                        </thead>
-                                        <span t-if="l.pagos_360_solicitud_state == 'pending'">
-                                            <tbody class="invoice_tbody" style="font-size:14px;">
-                                                <tr>
-                                                    <td>
-                                                        <img t-att-src="l.pagos_360_barcode_url" /><br/>
-                                                        <span t-field="l.pagos_360_barcode"/>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </span>
-                                        <span t-if="l.pagos_360_solicitud_state == 'paid'">
-                                            <tbody class="invoice_tbody" style="font-size:24px;" align="center">
-                                                <tr>
-                                                    <td>
-                                                        Pagado
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </span>
-                                    </table>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="width:15%;"></td>
-                                <td style="width:15%;"></td>
-                                <td style="width:15%;"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div align="center" style="font-size:16px;">
-                        <p>Medios de pagos habilitados</p>
-                        <img t-att-src="'/financiera_pagos_360/static/description/logos_medios_de_pago.png'" align="center"/>
-                    </div>
-                </div>
-            </t>
-        </t>
-    </template>
+	<template id="cupon_de_pago_report_view">
+		<t t-call="report.external_layout">
+			<t t-foreach="docs" t-as="o">
+				<div class="page" style="font-size:16px;">
+					<div align="center" style="font-size:16px;">
+							<h1>Cupones de pago</h1>
+							<p>Medios de pagos habilitados</p>
+							<img t-att-src="'/financiera_pagos_360/static/description/logos_medios_de_pago.png'" align="center"/>
+					</div>
+					<table class="table table-hover table-striped">
+						<thead>
+								<tr>
+										<th>Titular del Prestamo</th>
+										<th>Identificación principal</th>
+										<th>Prestamo</th>
+								</tr>
+						</thead>
+						<tbody class="invoice_tbody">
+								<tr>
+										<td><span t-field="o.partner_id.name"/></td>
+										<td><span t-field="o.partner_id.main_id_category_id"/> - <span t-field="o.partner_id.main_id_number"/></td>
+										<td><span t-field="o.name"/></td>
+								</tr>
+						</tbody>
+					</table>
+					
+					<table class="table table-condensed">
+						<t t-foreach="o.cuota_ids" t-as="l">
+							<tr>
+								<td>
+									<span t-field="l.numero_cuota"/>
+								</td>
+								<td>CUPÓN DE PAGO</td>
+								<td></td>
+								<td>Primer Vencimiento</td>
+								<td>
+									<span t-if="l.solicitud_ids">
+										<span t-field="l.solicitud_ids[0].pagos_360_first_due_date" t-field-options="{&quot;format&quot;: &quot;dd/MM/yyyy&quot;}"/>
+									</span>
+								</td>
+								<td>
+									<span t-if="l.solicitud_ids">
+										$<span t-field="l.solicitud_ids[0].pagos_360_first_total"/>
+									</span>
+								</td>
+							</tr>
+							<tr>
+								<td></td>
+								<td><b><span t-field="l.partner_id"/></b></td>
+								<td style="text-align: center;">
+									<span t-if="l.state in ['activa','judicial','incobrable'] and l.solicitud_ids">
+										<img t-att-src="l.solicitud_ids[0].pagos_360_barcode_url"/><br/>
+										<span t-field="l.solicitud_ids[0].pagos_360_barcode"/>
+									</span>
+									<span t-if="l.state not in ['cotizacion','activa','judicial','incobrable']">
+										Pagado
+									</span>
+									<span t-if="l.state in ['cotizacion']">
+										Cotizacion
+									</span>
+								</td>
+								<td>
+									<span t-if="l.solicitud_ids and l.solicitud_ids[0].pagos_360_second_due_date">
+										Segundo Vencimiento
+									</span>
+								</td>
+								<td>
+									<span t-if="l.solicitud_ids and l.solicitud_ids[0].pagos_360_second_due_date">
+										<span t-field="l.solicitud_ids[0].pagos_360_second_due_date" t-field-options="{&quot;format&quot;: &quot;dd/MM/yyyy&quot;}"/>
+									</span>
+								</td>
+								<td>
+									<span t-if="l.solicitud_ids and l.solicitud_ids[0].pagos_360_second_due_date">
+										$<span t-field="l.solicitud_ids[0].pagos_360_second_total"/>
+									</span>
+								</td>
+							</tr>
+							<tr>
+								<td></td>
+								<td>Referencia: <b><span t-field="l.id"/></b></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+						</t>
+					</table>
+					
+					<div align="center" style="font-size:16px;">
+							<p>Medios de pagos habilitados</p>
+							<img t-att-src="'/financiera_pagos_360/static/description/logos_medios_de_pago.png'" align="center"/>
+					</div>
+				</div>
+			</t>
+		</t>
+	</template>
+
+
+	<report 
+		id="solicitud_cupon_de_pago_report"
+		model="financiera.pagos360.solicitud"
+		string="Cupon de pago en PDF"
+		report_type="qweb-pdf"
+		name="financiera_pagos_360.solicitud_cupon_de_pago_report_view"
+		attachment_use="True"
+		file="financiera_pagos_360.solicitud_cupon_de_pago_report_view"
+  />
+	
+	<template id="solicitud_cupon_de_pago_report_view">
+		<t t-call="report.external_layout">
+			<t t-foreach="docs" t-as="o">
+				<div class="page" style="font-size:16px;">
+					<div align="center" style="font-size:16px;">
+							<h1>Cupon de pago</h1>
+							<p>Medios de pagos habilitados</p>
+							<img t-att-src="'/financiera_pagos_360/static/description/logos_medios_de_pago.png'" align="center"/>
+					</div>
+					<table class="table table-hover table-striped">
+						<thead>
+								<tr>
+										<th>Titular del Prestamo</th>
+										<th>Identificación principal</th>
+										<th>Prestamo</th>
+								</tr>
+						</thead>
+						<tbody class="invoice_tbody">
+								<tr>
+										<td><span t-field="o.partner_id.name"/></td>
+										<td><span t-field="o.partner_id.main_id_category_id"/> - <span t-field="o.partner_id.main_id_number"/></td>
+										<td><span t-field="o.prestamo_id.name"/></td>
+								</tr>
+						</tbody>
+					</table>
+					
+					<table class="table table-condensed">
+						<tr>
+							<td>
+								<span t-field="o.cuota_id.numero_cuota"/>
+							</td>
+							<td>CUPÓN DE PAGO</td>
+							<td></td>
+							<td>Primer Vencimiento</td>
+							<td>
+								<span t-field="o.pagos_360_first_due_date" t-field-options="{&quot;format&quot;: &quot;dd/MM/yyyy&quot;}"/>
+							</td>
+							<td>
+								$<span t-field="o.pagos_360_first_total"/>
+							</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td>
+								<b><span t-field="o.partner_id"/></b>
+							</td>
+							<td style="text-align: center;">
+								<span t-if="o.cuota_id.state in ['activa','judicial','incobrable']">
+									<img t-att-src="o.pagos_360_barcode_url"/><br/>
+									<span t-field="o.pagos_360_barcode"/>
+								</span>
+								<span t-if="o.cuota_id.state not in ['cotizacion','activa','judicial','incobrable']">
+									Pagado
+								</span>
+								<span t-if="o.cuota_id.state in ['cotizacion']">
+									Cotizacion
+								</span>
+							</td>
+							<td>
+								<span t-if="o.pagos_360_second_due_date">
+									Segundo Vencimiento
+								</span>
+							</td>
+							<td>
+								<span t-if="o.pagos_360_second_due_date">
+									<span t-field="o.pagos_360_second_due_date" t-field-options="{&quot;format&quot;: &quot;dd/MM/yyyy&quot;}"/>
+								</span>
+							</td>
+							<td>
+								<span t-if="o.pagos_360_second_due_date">
+									$<span t-field="o.pagos_360_second_total"/>
+								</span>
+							</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td>Referencia: <b><span t-field="o.pagos_360_solicitud_id"/></b></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+					</table>
+					
+				</div>
+			</t>
+		</t>
+	</template>
 
 </data>
 </openerp>
