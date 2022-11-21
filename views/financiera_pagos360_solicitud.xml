@@ -1,93 +1,93 @@
 <openerp>
 	<data>
 		<!-- Solicitud de pago tree -->
-    
-    <record model="ir.ui.view" id="pagos360_solicitud_tree">
-      <field name="name">financiera.pagos360.solicitud tree</field>
-      <field name="model">financiera.pagos360.solicitud</field>
-      <field name="arch" type="xml">
-        <tree>
-					<field name="create_date" string="Creado el" readonly="1"/>
-					<field name="name" readonly="1"/>
-					<field name="partner_id" readonly="1"/>
-					<field name="cuota_id" readonly="1"/>
-					<field name="prestamo_id" readonly="1"/>
-          <field name="pagos_360_solicitud_id" readonly="1"/>
-					<field name="pagos_360_first_due_date" readonly="1"/>
-					<field name="pagos_360_first_total" readonly="1"/>
-					<field name="pagos_360_second_due_date" readonly="1"/>
-					<field name="pagos_360_second_total" readonly="1"/>
-					<field name="pagos_360_checkout_url" widget="url" readonly="1"/>
-					<field name="pagos_360_pdf_url" widget="url" readonly="1"/>
-					<field name="pagos_360_solicitud_state" readonly="1"/>
-					<button name="actualizar_solicitud" string="Actualizar" attrs="{'invisible': [('pagos_360_solicitud_state','!=', 'pending')]}" type="object" class="oe_highlight"/>
-          <field name="company_id" groups="base.group_erp_manager"/>
-        </tree>
-      </field>
-    </record>
 
-    <record model="ir.ui.view" id="pagos360_solicitud_form">
-      <field name="name">financiera.pagos360.solicitud form</field>
-      <field name="model">financiera.pagos360.solicitud</field>
-      <field name="arch" type="xml">
-        <form>
+		<record model="ir.ui.view" id="pagos360_solicitud_tree">
+			<field name="name">financiera.pagos360.solicitud tree</field>
+			<field name="model">financiera.pagos360.solicitud</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="create_date" string="Creado el" readonly="1" />
+					<field name="name" readonly="1" />
+					<field name="partner_id" readonly="1" />
+					<field name="cuota_id" readonly="1" />
+					<field name="prestamo_id" readonly="1" />
+					<field name="pagos_360_solicitud_id" readonly="1" />
+					<field name="pagos_360_first_due_date" readonly="1" />
+					<field name="pagos_360_first_total" readonly="1" />
+					<field name="pagos_360_second_due_date" readonly="1" />
+					<field name="pagos_360_second_total" readonly="1" />
+					<field name="pagos_360_checkout_url" widget="url" readonly="1" />
+					<field name="pagos_360_pdf_url" widget="url" readonly="1" />
+					<field name="pagos_360_solicitud_state" readonly="1" />
+					<button name="actualizar_solicitud" string="Actualizar" attrs="{'invisible': [('pagos_360_solicitud_state','!=', 'pending')]}" type="object" class="oe_highlight" />
+					<field name="company_id" groups="base.group_erp_manager" />
+				</tree>
+			</field>
+		</record>
+
+		<record model="ir.ui.view" id="pagos360_solicitud_form">
+			<field name="name">financiera.pagos360.solicitud form</field>
+			<field name="model">financiera.pagos360.solicitud</field>
+			<field name="arch" type="xml">
+				<form>
 					<header>
-						<field name="pagos_360_solicitud_state" widget="statusbar" readonly="1"/>
+						<field name="pagos_360_solicitud_state" widget="statusbar" clickable="1" />
 					</header>
-          <header>
-            <button name="generar_solicitud" string="Generar solicitud" attrs="{'invisible': [('pagos_360_solicitud_state','!=', 'draft')]}" type="object" class="oe_highlight"/>
-						<button name="actualizar_solicitud" string="Actualizar" attrs="{'invisible': [('pagos_360_solicitud_state','!=', 'pending')]}" type="object" class="oe_highlight"/>
-          </header>
-          <sheet>
+					<header>
+						<button name="generar_solicitud" string="Generar solicitud" attrs="{'invisible': [('pagos_360_solicitud_state','!=', 'draft')]}" type="object" class="oe_highlight" />
+						<button name="actualizar_solicitud" string="Actualizar" attrs="{'invisible': [('pagos_360_solicitud_state','!=', 'pending')]}" type="object" class="oe_highlight" />
+					</header>
+					<sheet>
 						<group>
-							<field name="company_id" groups="base.group_erp_manager"/>
-							<label for='name' string='Nombre'/>
+							<field name="company_id" groups="base.group_erp_manager" />
+							<label for='name' string='Nombre' />
 							<h2>
-								<field name="name" readonly="1"/>
+								<field name="name" readonly="1" />
 							</h2>
-							<field name="cuota_id" attrs="{'readonly': [('pagos_360_solicitud_state', '!=', 'draft')]}"/>
-							<field name="partner_id" readonly="1"/>
-							<field name="prestamo_id" readonly="1"/>
-							<field name="pagos_360_solicitud_id" readonly="1"/>
-							<field name="pagos_360_first_due_date" readonly="1"/>
-							<field name="pagos_360_first_total" readonly="1"/>
-							<field name="pagos_360_second_due_date" readonly="1"/>
-							<field name="pagos_360_second_total" readonly="1"/>
-							<field name="pagos_360_barcode" readonly="1"/>
-							<field name="pagos_360_checkout_url" widget="url" readonly="1"/>
-							<field name="pagos_360_barcode_url" widget="url" readonly="1"/>
-							<field name="pagos_360_pdf_url" widget="url" readonly="1"/>
+							<field name="cuota_id" attrs="{'readonly': [('pagos_360_solicitud_state', '!=', 'draft')]}" />
+							<field name="partner_id" readonly="1" />
+							<field name="prestamo_id" readonly="1" />
+							<field name="pagos_360_solicitud_id" readonly="0" />
+							<field name="pagos_360_first_due_date" readonly="1" />
+							<field name="pagos_360_first_total" readonly="1" />
+							<field name="pagos_360_second_due_date" readonly="1" />
+							<field name="pagos_360_second_total" readonly="1" />
+							<field name="pagos_360_barcode" readonly="1" />
+							<field name="pagos_360_checkout_url" widget="url" readonly="1" />
+							<field name="pagos_360_barcode_url" widget="url" readonly="1" />
+							<field name="pagos_360_pdf_url" widget="url" readonly="1" />
 						</group>
-            <group></group>
-          </sheet>
-        </form>
-      </field>
-    </record>
+						<group></group>
+					</sheet>
+				</form>
+			</field>
+		</record>
 
-    <record model="ir.actions.act_window" id="pagos360_solicitud_action">
-      <field name="name">Solicitudes de Pago</field>
-      <field name="res_model">financiera.pagos360.solicitud</field>
-      <field name="view_mode">tree,form</field>
-      <field name="view_ids" eval="[(5, 0, 0), 
+		<record model="ir.actions.act_window" id="pagos360_solicitud_action">
+			<field name="name">Solicitudes de Pago</field>
+			<field name="res_model">financiera.pagos360.solicitud</field>
+			<field name="view_mode">tree,form</field>
+			<field name="view_ids" eval="[(5, 0, 0), 
         (0, 0, {'view_mode': 'tree', 'view_id': ref('pagos360_solicitud_tree')}), 
-        (0, 0, {'view_mode': 'form', 'view_id': ref('pagos360_solicitud_form')})]"/>
-    </record>
+        (0, 0, {'view_mode': 'form', 'view_id': ref('pagos360_solicitud_form')})]" />
+		</record>
 
 		<record model="ir.actions.act_window" id="pagos360_solicitud_cobro_duplicado_action">
-      <field name="name">Cobros duplicados</field>
-      <field name="res_model">financiera.pagos360.solicitud</field>
+			<field name="name">Cobros duplicados</field>
+			<field name="res_model">financiera.pagos360.solicitud</field>
 			<field name="domain">[('pagos_360_solicitud_state', '=', 'paid'), ('pagos_360_cobro_duplicado','=', True)]</field>
-      <field name="view_mode">tree,form</field>
-      <field name="view_ids" eval="[(5, 0, 0), 
+			<field name="view_mode">tree,form</field>
+			<field name="view_ids" eval="[(5, 0, 0), 
         (0, 0, {'view_mode': 'tree', 'view_id': ref('pagos360_solicitud_tree')}), 
-        (0, 0, {'view_mode': 'form', 'view_id': ref('pagos360_solicitud_form')})]"/>
-    </record>
-	
-    <!-- Menu item -->
-    <menuitem name="Solicitudes de Pago" id="menu_solicitudes_action" parent="menu_pagos_360" action="pagos360_solicitud_action" 
-			sequence="10"/>
-		<menuitem name="Pagos duplicados" id="menu_solicitudes_cobro_duplicado_action" parent="menu_pagos_360" 
-			action="pagos360_solicitud_cobro_duplicado_action" sequence="20"/>
+        (0, 0, {'view_mode': 'form', 'view_id': ref('pagos360_solicitud_form')})]" />
+		</record>
+
+		<!-- Menu item -->
+		<menuitem name="Solicitudes de Pago" id="menu_solicitudes_action" parent="menu_pagos_360" action="pagos360_solicitud_action"
+			sequence="10" />
+		<menuitem name="Pagos duplicados" id="menu_solicitudes_cobro_duplicado_action" parent="menu_pagos_360"
+			action="pagos360_solicitud_cobro_duplicado_action" sequence="20" />
 
 	</data>
 </openerp>

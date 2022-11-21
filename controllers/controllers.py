@@ -10,7 +10,6 @@ class FinancieraPagos360WebhookController(http.Controller):
 	@http.route("/financiera.pagos.360/webhook", type='json', auth='none', cors='*', csrf=False)
 	def webhook_listener(self, **post):
 		_logger.info('Pagos360: nuevo webhook.')
-		_logger.info(request.jsonrequest)
 		data = request.jsonrequest
 		webhook_type = None
 		entity_id = None
