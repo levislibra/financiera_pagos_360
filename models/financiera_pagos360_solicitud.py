@@ -200,10 +200,12 @@ class FinancieraPagos360Solicitud(models.Model):
 				print("PUNITORIO STOP DATE: ", punitorio_stop_date)
 				print("self.pagos_360_first_due_date: ", self.pagos_360_first_due_date)
 				print("transformadas")
-				print("payment_date.strftime('%Y-%m-%d'): ", payment_date.strftime('%Y-%m-%d'))
-				print("self.pagos_360_first_due_date: ", self.pagos_360_first_due_date.strftime('%Y-%m-%d'))
-				if payment_date.strftime('%Y-%m-%d') <= self.pagos_360_first_due_date.strftime('%Y-%m-%d'):
-					punitorio_stop_date = self.create_date.strftime('%Y-%m-%d')
+				compare_payment_date = datetime.strptime(payment_date, "%Y-%m-%d")
+				compare_pagos_360_first_due_date = datetime.strptime(self.pagos_360_first_due_date, "%Y-%m-%d")
+				if compare_payment_date <= compare_pagos_360_first_due_date:
+					print("entramos")
+					punitorio_stop_date = self.create_date
+					print("punitorio_stop_date: ", punitorio_stop_date)
 				amount = request_result['amount']
 				# amount = self.cuota_id.saldo
 				invoice_date = datetime.now()
