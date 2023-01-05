@@ -177,12 +177,11 @@ class FinancieraPagos360Solicitud(models.Model):
 	
 	@api.one
 	def actualizar_solicitud(self):
-		print("actualizar_solicitud")
-		print("actualizar_solicitud")
-		print("actualizar_solicitud")
-		print("actualizar_solicitud")
-		print("actualizar_solicitud")
-		print("actualizar_solicitud")
+		_logger.info("actualizar_solicitud")
+		_logger.info("actualizar_solicitud")
+		_logger.info("actualizar_solicitud")
+		_logger.info("actualizar_solicitud")
+		_logger.info("actualizar_solicitud")
 		pagos_360_id = self.cuota_id.company_id.pagos_360_id
 		if len(pagos_360_id) > 0 and self.pagos_360_solicitud_id > 0:
 			solicitud_pago = self.obtener_solicitud()
@@ -197,14 +196,13 @@ class FinancieraPagos360Solicitud(models.Model):
 				factura_electronica = pagos_360_id.factura_electronica
 				payment_date = request_result['paid_at']
 				punitorio_stop_date = request_result['paid_at']
-				print("PUNITORIO STOP DATE: ", punitorio_stop_date)
-				print("self.pagos_360_first_due_date: ", self.pagos_360_first_due_date)
-				print("transformadas")
-				
+				_logger.info("PUNITORIO STOP DATE: ", punitorio_stop_date)
+				_logger.info("self.pagos_360_first_due_date: ", self.pagos_360_first_due_date)
+				_logger.info("punitorio_stop_date <= self.pagos_360_first_due_date: ", punitorio_stop_date <= self.pagos_360_first_due_date)
 				if punitorio_stop_date <= self.pagos_360_first_due_date:
-					print("entramos")
+					_logger.info("entramos")
 					punitorio_stop_date = self.create_date
-					print("punitorio_stop_date: ", punitorio_stop_date)
+					_logger.info("punitorio_stop_date: ", punitorio_stop_date)
 				amount = request_result['amount']
 				# amount = self.cuota_id.saldo
 				invoice_date = datetime.now()
