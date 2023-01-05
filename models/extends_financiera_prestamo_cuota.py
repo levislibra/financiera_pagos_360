@@ -37,7 +37,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 			solicitud_id.generar_solicitud()
 
 	@api.one
-	def pagos_360_cobrar_y_facturar(self, payment_date, journal_id, factura_electronica, amount, invoice_date):
+	def pagos_360_cobrar_y_facturar(self, payment_date, journal_id, factura_electronica, amount, invoice_date, punitorio_stop_date):
 		# Cobro cuota
 		partner_id = self.partner_id
 		fpcmc_values = {
@@ -47,7 +47,7 @@ class ExtendsFinancieraPrestamoCuota(models.Model):
 		multi_cobro_id = self.env['financiera.prestamo.cuota.multi.cobro'].create(fpcmc_values)
 		partner_id.multi_cobro_ids = [multi_cobro_id.id]
 		# Fijar fecha punitorio
-		self.punitorio_fecha_actual = payment_date
+		self.punitorio_fecha_actual = punitorio_stop_date
 		if self.saldo > 0:
 			self.confirmar_cobrar_cuota(payment_date, journal_id, amount, multi_cobro_id)
 		# Facturacion cuota
