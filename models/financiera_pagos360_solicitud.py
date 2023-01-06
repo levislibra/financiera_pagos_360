@@ -189,9 +189,9 @@ class FinancieraPagos360Solicitud(models.Model):
 				# superuser_id.sudo().company_id = self.company_id.id
 				journal_id = pagos_360_id.journal_id
 				factura_electronica = pagos_360_id.factura_electronica
+				amount = request_result['amount']
 				payment_date = request_result['paid_at']
-				punitorio_stop_date = request_result['paid_at']
-				punitorio_stop_date = datetime.strptime(punitorio_stop_date[0:10], '%Y-%m-%d')
+				punitorio_stop_date = datetime.strptime(payment_date[0:10], '%Y-%m-%d')
 				pagos_360_first_due_date = datetime.strptime(self.pagos_360_first_due_date, "%Y-%m-%d")
 				pagos_360_second_due_date = False
 				if self.pagos_360_second_due_date:
@@ -206,7 +206,13 @@ class FinancieraPagos360Solicitud(models.Model):
 					_logger.info("entramos ////////////")
 					punitorio_stop_date = str(self.pagos_360_second_due_date)
 					_logger.info("punitorio_stop_date: %s" % punitorio_stop_date)
-				amount = request_result['amount']
+					if amount == self.cuota_id.total_segunda_fecha:
+						self.cuota_id.punitorio_fijar = True
+						punitorio_manual = self.cuota_id.total_primera_fecha - self.cuota_id.total_segunda_fecha
+						if self.cuota_id.punitorio_computar and self.cuota_id.punitorio_calcular_iva and self.cuota_id.punitorio_vat_tax_id:
+							punitorio_manual = punitorio_manual / (1 + self.cuota_id.punitorio_vat_tax_id.amount)
+						self.cuota_id.punitorio_manual = punitorio_manual
+				
 				# amount = self.cuota_id.saldo
 				invoice_date = datetime.now()
 				self.cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, invoice_date, punitorio_stop_date)
