@@ -199,7 +199,11 @@ class FinancieraPagos360Solicitud(models.Model):
 				_logger.info("PUNITORIO STOP DATE: %s" % punitorio_stop_date)
 				_logger.info("self.pagos_360_first_due_date: %s" % self.pagos_360_first_due_date)
 				_logger.info("punitorio_stop_date <= self.pagos_360_first_due_date: %s" % (punitorio_stop_date <= self.pagos_360_first_due_date))
-				if punitorio_stop_date <= self.pagos_360_first_due_date:
+				punitorio_stop_date = datetime.strptime(punitorio_stop_date, '%d/%m/%y %H:%M:%S')
+				fecha_primer_vencimiento = datetime.strptime(self.fecha_primer_vencimiento, "%Y-%m-%d")
+				_logger.info("punitorio_stop_date: %s" % punitorio_stop_date)
+				_logger.info("fecha_primer_vencimiento: %s" % fecha_primer_vencimiento)
+				if punitorio_stop_date <= fecha_primer_vencimiento:
 					_logger.info("entramos")
 					punitorio_stop_date = self.create_date
 					_logger.info("punitorio_stop_date: ", punitorio_stop_date)
