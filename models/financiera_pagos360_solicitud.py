@@ -196,9 +196,9 @@ class FinancieraPagos360Solicitud(models.Model):
 				factura_electronica = pagos_360_id.factura_electronica
 				payment_date = request_result['paid_at']
 				punitorio_stop_date = request_result['paid_at']
-				_logger.info("PUNITORIO STOP DATE: ", punitorio_stop_date)
-				_logger.info("self.pagos_360_first_due_date: ", self.pagos_360_first_due_date)
-				_logger.info("punitorio_stop_date <= self.pagos_360_first_due_date: ", punitorio_stop_date <= self.pagos_360_first_due_date)
+				_logger.info("PUNITORIO STOP DATE: %s" % punitorio_stop_date)
+				_logger.info("self.pagos_360_first_due_date: %s" % self.pagos_360_first_due_date)
+				_logger.info("punitorio_stop_date <= self.pagos_360_first_due_date: %s" % (punitorio_stop_date <= self.pagos_360_first_due_date))
 				if punitorio_stop_date <= self.pagos_360_first_due_date:
 					_logger.info("entramos")
 					punitorio_stop_date = self.create_date
