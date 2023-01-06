@@ -208,7 +208,7 @@ class FinancieraPagos360Solicitud(models.Model):
 					_logger.info("punitorio_stop_date: %s" % punitorio_stop_date)
 					if amount == self.cuota_id.total_segunda_fecha:
 						self.cuota_id.punitorio_fijar = True
-						punitorio_manual = self.cuota_id.total_primera_fecha - self.cuota_id.total_segunda_fecha
+						punitorio_manual = self.cuota_id.total_segunda_fecha - self.cuota_id.total_primera_fecha
 						if self.cuota_id.punitorio_computar and self.cuota_id.punitorio_calcular_iva and self.cuota_id.punitorio_vat_tax_id:
 							punitorio_manual = punitorio_manual / (1 + self.cuota_id.punitorio_vat_tax_id.amount)
 						self.cuota_id.punitorio_manual = punitorio_manual
