@@ -177,11 +177,6 @@ class FinancieraPagos360Solicitud(models.Model):
 	
 	@api.one
 	def actualizar_solicitud(self):
-		_logger.info("actualizar_solicitud")
-		_logger.info("actualizar_solicitud")
-		_logger.info("actualizar_solicitud")
-		_logger.info("actualizar_solicitud")
-		_logger.info("actualizar_solicitud")
 		pagos_360_id = self.cuota_id.company_id.pagos_360_id
 		if len(pagos_360_id) > 0 and self.pagos_360_solicitud_id > 0:
 			solicitud_pago = self.obtener_solicitud()
@@ -196,16 +191,20 @@ class FinancieraPagos360Solicitud(models.Model):
 				factura_electronica = pagos_360_id.factura_electronica
 				payment_date = request_result['paid_at']
 				punitorio_stop_date = request_result['paid_at']
-				_logger.info("PUNITORIO STOP DATE: %s" % punitorio_stop_date)
-				_logger.info("self.pagos_360_first_due_date: %s" % self.pagos_360_first_due_date)
-				_logger.info("punitorio_stop_date <= self.pagos_360_first_due_date: %s" % (punitorio_stop_date <= self.pagos_360_first_due_date))
 				punitorio_stop_date = datetime.strptime(punitorio_stop_date[0:10], '%Y-%m-%d')
 				pagos_360_first_due_date = datetime.strptime(self.pagos_360_first_due_date, "%Y-%m-%d")
-				_logger.info("punitorio_stop_date: %s" % punitorio_stop_date)
-				_logger.info("pagos_360_first_due_date: %s" % pagos_360_first_due_date)
+				pagos_360_second_due_date = False
+				if self.pagos_360_second_due_date:
+					pagos_360_second_due_date = datetime.strptime(self.pagos_360_second_due_date, "%Y-%m-%d")
 				if punitorio_stop_date <= pagos_360_first_due_date:
 					_logger.info("entramos")
 					punitorio_stop_date = str(self.create_date)[0:10]
+					_logger.info("punitorio_stop_date: %s" % punitorio_stop_date)
+				elif pagos_360_second_due_date and punitorio_stop_date <= pagos_360_second_due_date:
+					_logger.info("entramos ------------")
+					_logger.info("entramos ************")
+					_logger.info("entramos ////////////")
+					punitorio_stop_date = str(self.pagos_360_second_due_date)
 					_logger.info("punitorio_stop_date: %s" % punitorio_stop_date)
 				amount = request_result['amount']
 				# amount = self.cuota_id.saldo
