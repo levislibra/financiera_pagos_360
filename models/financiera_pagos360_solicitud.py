@@ -57,21 +57,18 @@ class FinancieraPagos360Solicitud(models.Model):
 	
 	@api.model
 	def _cron_generar_solicitudes(self):
-		print("comenzamos _cron_generar_solicitudes")
 		cr = self.env.cr
 		uid = self.env.uid
 		company_obj = self.pool.get('res.company')
 		company_ids = company_obj.search(cr, uid, [])
 		for companyid in company_ids:
 			company_id = company_obj.browse(cr, uid, companyid)
-			print("Company: ", company_id.name)
 			cuota_obj = self.pool.get('financiera.prestamo.cuota')
 			cuota_ids = cuota_obj.search(cr, uid, [
 				('pagos_360_solicitud_id', '>', 0),
 				('pagos_360_solicitud_state', '=', 'pending'),
 				('company_id', '=', companyid),
 			])
-			print('  Cuotas para generar solicitud: ', len(cuota_ids))
 			for cuotaid in cuota_ids:
 				cuota_id = cuota_obj.browse(cr, uid, cuotaid)
 				solicitud_obj = self.pool.get('financiera.pagos360.solicitud')
@@ -191,42 +188,11 @@ class FinancieraPagos360Solicitud(models.Model):
 				factura_electronica = pagos_360_id.factura_electronica
 				amount = request_result['amount']
 				payment_date = request_result['paid_at']
-				# punitorio_stop_date = datetime.strptime(payment_date[0:10], '%Y-%m-%d')
-				# pagos_360_first_due_date = datetime.strptime(self.pagos_360_first_due_date, "%Y-%m-%d")
-				# pagos_360_second_due_date = False
-				# if self.pagos_360_second_due_date:
-				# 	pagos_360_second_due_date = datetime.strptime(self.pagos_360_second_due_date, "%Y-%m-%d")
-				# if punitorio_stop_date <= pagos_360_first_due_date:
-				# 	_logger.info("entramos")
-				# 	punitorio_stop_date = str(self.create_date)[0:10]
-				# 	_logger.info("punitorio_stop_date: %s" % punitorio_stop_date)
-				# elif pagos_360_second_due_date and punitorio_stop_date <= pagos_360_second_due_date:
-				# 	_logger.info("entramos ------------")
-				# 	_logger.info("entramos ************")
-				# 	_logger.info("entramos ////////////")
-				# 	punitorio_stop_date = str(self.pagos_360_second_due_date)
-				# 	_logger.info("punitorio_stop_date: %s" % punitorio_stop_date)
-				# 	if amount == self.cuota_id.total_segunda_fecha:
-				# 		_logger.info("total segunda fecha ------------")
-				# 		_logger.info("total segunda fecha ************")
-				# 		_logger.info("total segunda fecha ////////////")
-				# 		self.cuota_id.punitorio_fijar = True
-				# 		punitorio_manual = self.cuota_id.total_segunda_fecha - self.cuota_id.total_primera_fecha
-				# 		if self.cuota_id.punitorio_computar and self.cuota_id.punitorio_calcular_iva and self.cuota_id.punitorio_vat_tax_id:
-				# 			punitorio_manual = punitorio_manual / (1 + self.cuota_id.punitorio_vat_tax_id.amount)
-				# 		self.cuota_id.punitorio_manual = punitorio_manual
-				# invoice_date = datetime.now()
 				if amount > self.cuota_id.total_primera_fecha:
-					_logger.info("amount > total_primer_fecha ------------")
-					_logger.info("amount > total_primer_fecha ************")
-					_logger.info("amount > total_primer_fecha ////////////")
 					self.cuota_id.punitorio_fijar = True
 					punitorio_manual = amount - self.cuota_id.total_primera_fecha
 					if self.cuota_id.punitorio_computar and self.cuota_id.punitorio_calcular_iva and self.cuota_id.punitorio_vat_tax_id:
 						punitorio_manual = punitorio_manual / (1 + (self.cuota_id.punitorio_vat_tax_id.amount / 100))
-					_logger.info("punitorio_manual ------------ %s" % punitorio_manual)
-					_logger.info("punitorio_manual ************ %s" % punitorio_manual)
-					_logger.info("punitorio_manual //////////// %s" % punitorio_manual)
 					self.cuota_id.punitorio_manual = punitorio_manual
 				self.cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, datetime.now(), payment_date)
 				pagos_360_id.actualizar_saldo()
