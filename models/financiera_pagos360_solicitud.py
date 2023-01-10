@@ -18,8 +18,10 @@ class FinancieraPagos360Solicitud(models.Model):
 	_order = 'id desc'
 	name = fields.Char('Nombre')
 	cuota_id = fields.Many2one('financiera.prestamo.cuota', 'Cuota')
+	cuota_state = fields.Selection(related='cuota_id.state', string='Estado de la cuota', readonly=True)
 	partner_id = fields.Many2one('res.partner', 'Cliente')
 	prestamo_id = fields.Many2one('financiera.prestamo', 'Prestamo')
+	pagos_360_payment_id = fields.Many2one('account.payment', 'Comprobante de pago')
 	pagos_360_solicitud_id = fields.Integer('ID de la solicitud')
 	pagos_360_solicitud_state = fields.Selection([
 			('draft', 'Borrador'), ('pending', 'Pendiente'), ('paid', 'Pagada'),
@@ -178,7 +180,8 @@ class FinancieraPagos360Solicitud(models.Model):
 		if len(pagos_360_id) > 0 and self.pagos_360_solicitud_id > 0:
 			solicitud_pago = self.obtener_solicitud()
 			# Chequeamos si la solicitud esta en 'pending' y en el servidor esta en 'paid' hacemos el cobro y facturacion
-			if solicitud_pago and self.pagos_360_solicitud_state == 'pending' and solicitud_pago['state'] == 'paid':
+			# self.pagos_360_solicitud_state == 'pending' and 
+			if solicitud_pago and solicitud_pago['state'] == 'paid':
 				if self.cuota_id.state in ('cobrada', 'precancelada', 'cobrada_con_reintegro'):
 					self.pagos_360_cobro_duplicado = True
 				request_result = solicitud_pago['request_result'][0]
@@ -194,7 +197,9 @@ class FinancieraPagos360Solicitud(models.Model):
 					if self.cuota_id.punitorio_computar and self.cuota_id.punitorio_calcular_iva and self.cuota_id.punitorio_vat_tax_id:
 						punitorio_manual = punitorio_manual / (1 + (self.cuota_id.punitorio_vat_tax_id.amount / 100))
 					self.cuota_id.punitorio_manual = punitorio_manual
-				self.cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, datetime.now(), payment_date)
+				if self.pagos_360_payment_id:
+					self.pagos_360_payment_id.cancel()
+				self.cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, datetime.now(), payment_date, self)
 				pagos_360_id.actualizar_saldo()
 			self.pagos_360_solicitud_state = solicitud_pago['state']
 
