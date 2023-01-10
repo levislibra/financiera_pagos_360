@@ -259,3 +259,7 @@ class FinancieraPagos360Solicitud(models.Model):
 			'target': 'new',
 			'context': ctx,
 		}
+
+	@api.one
+	def marcar_resuelto_cobro_duplicado(self):
+		self.pagos_360_cobro_duplicado = False
