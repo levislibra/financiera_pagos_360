@@ -40,8 +40,15 @@
                 <field name="expire_days_payment"/>
                 <field name="expire_max_count_create"/>
               </group>
+              <group>
+                <field name="cobros_archivo"/>
+                <field name="cobros_contabilizados" readonly="1"/>
+                <field name="cobros_no_encontrados" widget="html" readonly="1"/>
+                <label for="actualizar_cobros" string=" "/>
+                <button name="actualizar_cobros" string="Actualizar Cobros" type="object" class="oe_highlight"/>
+              </group>
               <group string="Cobro y Facturacion">
-                <field name="journal_id" required="1"/>
+                <field name="journal_id" required="0"/>
                 <field name="factura_electronica"/>
               </group>
               <group string="Email y reporte">
