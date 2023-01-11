@@ -74,8 +74,9 @@ class FinancieraPagos360Cuenta(models.Model):
 			_id = self.env['financiera.pagos360.solicitud'].search([('pagos_360_solicitud_id', '=', id_solicitud)])
 			if _id:
 				solicitud_id = self.env['financiera.pagos360.solicitud'].browse(_id.id)
-				solicitud_id.actualizar_solicitud()
-				self.cobros_contabilizados += 1
+				if solicitud_id.pagos_360_solicitud_state == 'pending':
+					solicitud_id.actualizar_solicitud()
+					self.cobros_contabilizados += 1
 			else:
 				# hacer i modulo 6 para que se vea bonito en el html
 				if i % 6 == 0:
