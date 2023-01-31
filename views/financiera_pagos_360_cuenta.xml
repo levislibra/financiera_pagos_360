@@ -21,7 +21,8 @@
       <field name="arch" type="xml">
         <form create="false" delete="false">
           <header>
-            <button name="actualizar_saldo" string="Actualizar Saldo" type="object" class="oe_highlight"/>
+            <button name="actualizar_saldo" string="Actualizar Saldo" type="object"/>
+            <button name="check_cobros" string="Actualizar cobros" type="object"/>
           </header>
           <sheet>
 						<group>
@@ -36,18 +37,10 @@
               </group>
               <group string="Opciones Solicitudes de Pago">
 								<field name="set_default_payment"/>
-                <field name="expire_create_new"/>
                 <field name="expire_days_payment"/>
-                <field name="expire_max_count_create"/>
-              </group>
-              <group>
-                <field name="cobros_archivo"/>
-                <field name="cobros_contabilizados" readonly="1"/>
-                <field name="cobros_no_encontrados" widget="html" readonly="1"/>
-                <label for="actualizar_cobros" string=" "/>
-                <button name="actualizar_cobros" string="Actualizar Cobros" type="object" class="oe_highlight"/>
               </group>
               <group string="Cobro y Facturacion">
+                <field name="cobros_days_check"/>
                 <field name="journal_id" required="0"/>
                 <field name="factura_electronica"/>
               </group>

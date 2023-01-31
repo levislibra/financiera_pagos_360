@@ -12,7 +12,7 @@
 					<field name="partner_id" readonly="1" />
 					<field name="cuota_id" readonly="1" />
 					<field name="prestamo_id" readonly="1" />
-					<field name="pagos_360_solicitud_id" readonly="1" />
+					<field name="pagos_360_solicitud_id" widget="char" readonly="1" />
 					<field name="pagos_360_first_due_date" readonly="1" />
 					<field name="pagos_360_first_total" readonly="1" />
 					<field name="pagos_360_second_due_date" readonly="1" />
@@ -48,11 +48,11 @@
 							<h2>
 								<field name="name" readonly="1" />
 							</h2>
-							<field name="cuota_id" attrs="{'readonly': [('pagos_360_solicitud_state', '!=', 'draft')]}" />
+							<field name="cuota_id" attrs="{'readonly': [('pagos_360_solicitud_state', '=', 'paid')]}" />
 							<field name="cuota_state" readonly="1" />
 							<field name="partner_id" readonly="1" />
 							<field name="prestamo_id" readonly="1" />
-							<field name="pagos_360_solicitud_id" readonly="0" />
+							<field name="pagos_360_solicitud_id" widget="char" readonly="0" />
 							<field name="pagos_360_first_due_date" readonly="1" />
 							<field name="pagos_360_first_total" readonly="1" />
 							<field name="pagos_360_second_due_date" readonly="1" />
@@ -99,6 +99,16 @@
 				(0, 0, {'view_mode': 'form', 'view_id': ref('pagos360_solicitud_form')})]" />
 		</record>
 
+		<record model="ir.actions.act_window" id="pagos360_solicitud_cobro_sin_cuota_action">
+			<field name="name">Cobro sin cuota asignada</field>
+			<field name="res_model">financiera.pagos360.solicitud</field>
+			<field name="domain">[('cuota_id', '=', False)]</field>
+			<field name="view_mode">tree,form</field>
+			<field name="view_ids" eval="[(5, 0, 0), 
+				(0, 0, {'view_mode': 'tree', 'view_id': ref('pagos360_solicitud_tree')}), 
+				(0, 0, {'view_mode': 'form', 'view_id': ref('pagos360_solicitud_form')})]" />
+		</record>
+
 		<!-- Menu item -->
 		<menuitem name="Solicitudes de Pago" id="menu_solicitudes_action" parent="menu_pagos_360" action="pagos360_solicitud_action"
 			sequence="10" />
@@ -106,6 +116,8 @@
 			action="pagos360_solicitud_cobro_duplicado_action" sequence="20" />
 		<menuitem name="Cobros por actualizar" id="menu_solicitudes_paid_cuota_activa_action" parent="menu_pagos_360"
 			action="pagos360_solicitud_paid_cuota_activa_action" sequence="30" />
+		<menuitem name="Cobros sin asignar" id="menu_solicitudes_cobros_sin_asignar_action" parent="menu_pagos_360"
+			action="pagos360_solicitud_cobro_sin_cuota_action" sequence="40" />
 
 	</data>
 </openerp>

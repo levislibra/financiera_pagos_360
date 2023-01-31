@@ -20,6 +20,7 @@ class FinancieraPagos360Solicitud(models.Model):
 	cuota_id = fields.Many2one('financiera.prestamo.cuota', 'Cuota')
 	cuota_state = fields.Selection(related='cuota_id.state', string='Estado de la cuota', readonly=True)
 	partner_id = fields.Many2one('res.partner', 'Cliente')
+	payer_name = fields.Char('Nombre del pagador')
 	prestamo_id = fields.Many2one('financiera.prestamo', 'Prestamo')
 	pagos_360_payment_id = fields.Many2one('account.payment', 'Comprobante de pago')
 	pagos_360_solicitud_id = fields.Integer('ID de la solicitud')
@@ -57,47 +58,47 @@ class FinancieraPagos360Solicitud(models.Model):
 		rec = super(FinancieraPagos360Solicitud, self).create(values)
 		return rec
 	
-	@api.model
-	def _cron_generar_solicitudes(self):
-		cr = self.env.cr
-		uid = self.env.uid
-		company_obj = self.pool.get('res.company')
-		company_ids = company_obj.search(cr, uid, [])
-		for companyid in company_ids:
-			company_id = company_obj.browse(cr, uid, companyid)
-			cuota_obj = self.pool.get('financiera.prestamo.cuota')
-			cuota_ids = cuota_obj.search(cr, uid, [
-				('pagos_360_solicitud_id', '>', 0),
-				('pagos_360_solicitud_state', '=', 'pending'),
-				('company_id', '=', companyid),
-			])
-			for cuotaid in cuota_ids:
-				cuota_id = cuota_obj.browse(cr, uid, cuotaid)
-				solicitud_obj = self.pool.get('financiera.pagos360.solicitud')
-				solicitud_ids = solicitud_obj.search(cr, uid, [
-					('pagos_360_solicitud_id', '=', cuota_id.pagos_360_solicitud_id),
-					('company_id', '=', companyid),
-				])
-				if len(solicitud_ids) == 0:
-					values = {
-						'pagos_360_solicitud_id': cuota_id.pagos_360_solicitud_id,
-						'name': 'SOLICITUD/' + str(cuota_id.pagos_360_solicitud_id),
-						'pagos_360_solicitud_state': cuota_id.pagos_360_solicitud_state,
-						'pagos_360_first_due_date': cuota_id.pagos_360_first_due_date,
-						'pagos_360_first_total': cuota_id.pagos_360_first_total,
-						'pagos_360_second_due_date': cuota_id.pagos_360_second_due_date,
-						'pagos_360_second_total': cuota_id.pagos_360_second_total,
-						'pagos_360_barcode': cuota_id.pagos_360_barcode,
-						'pagos_360_checkout_url': cuota_id.pagos_360_checkout_url,
-						'pagos_360_barcode_url': cuota_id.pagos_360_barcode_url,
-						'pagos_360_pdf_url': cuota_id.pagos_360_pdf_url,
-					}
-					nueva_solicitud_id = self.env['financiera.pagos360.solicitud'].crear_solicitud(cuota_id)
-					nueva_solicitud_id.update(values)
-					print("    Generamos nueva solicitud de pago: ", nueva_solicitud_id.name)
-				else:
-					print('    La solicitud de pago ya existe')
-			print("Finalizamos con la compania!!---------------")
+	# @api.model
+	# def _cron_generar_solicitudes(self):
+	# 	cr = self.env.cr
+	# 	uid = self.env.uid
+	# 	company_obj = self.pool.get('res.company')
+	# 	company_ids = company_obj.search(cr, uid, [])
+	# 	for companyid in company_ids:
+	# 		# company_id = company_obj.browse(cr, uid, companyid)
+	# 		cuota_obj = self.pool.get('financiera.prestamo.cuota')
+	# 		cuota_ids = cuota_obj.search(cr, uid, [
+	# 			('pagos_360_solicitud_id', '>', 0),
+	# 			('pagos_360_solicitud_state', '=', 'pending'),
+	# 			('company_id', '=', companyid),
+	# 		])
+	# 		for cuotaid in cuota_ids:
+	# 			cuota_id = cuota_obj.browse(cr, uid, cuotaid)
+	# 			solicitud_obj = self.pool.get('financiera.pagos360.solicitud')
+	# 			solicitud_ids = solicitud_obj.search(cr, uid, [
+	# 				('pagos_360_solicitud_id', '=', cuota_id.pagos_360_solicitud_id),
+	# 				('company_id', '=', companyid),
+	# 			])
+	# 			if len(solicitud_ids) == 0:
+	# 				values = {
+	# 					'pagos_360_solicitud_id': cuota_id.pagos_360_solicitud_id,
+	# 					'name': 'SOLICITUD/' + str(cuota_id.pagos_360_solicitud_id),
+	# 					'pagos_360_solicitud_state': cuota_id.pagos_360_solicitud_state,
+	# 					'pagos_360_first_due_date': cuota_id.pagos_360_first_due_date,
+	# 					'pagos_360_first_total': cuota_id.pagos_360_first_total,
+	# 					'pagos_360_second_due_date': cuota_id.pagos_360_second_due_date,
+	# 					'pagos_360_second_total': cuota_id.pagos_360_second_total,
+	# 					'pagos_360_barcode': cuota_id.pagos_360_barcode,
+	# 					'pagos_360_checkout_url': cuota_id.pagos_360_checkout_url,
+	# 					'pagos_360_barcode_url': cuota_id.pagos_360_barcode_url,
+	# 					'pagos_360_pdf_url': cuota_id.pagos_360_pdf_url,
+	# 				}
+	# 				nueva_solicitud_id = self.env['financiera.pagos360.solicitud'].crear_solicitud(cuota_id)
+	# 				nueva_solicitud_id.update(values)
+	# 				print("    Generamos nueva solicitud de pago: ", nueva_solicitud_id.name)
+	# 			else:
+	# 				print('    La solicitud de pago ya existe')
+	# 		print("Finalizamos con la compania!!---------------")
 
 	@api.one
 	def generar_solicitud(self):
@@ -179,9 +180,9 @@ class FinancieraPagos360Solicitud(models.Model):
 		pagos_360_id = self.cuota_id.company_id.pagos_360_id
 		if len(pagos_360_id) > 0 and self.pagos_360_solicitud_id > 0:
 			solicitud_pago = self.obtener_solicitud()
+			print("solicitud_pago: ", solicitud_pago)
 			# Chequeamos si la solicitud esta en 'pending' y en el servidor esta en 'paid' hacemos el cobro y facturacion
-			# self.pagos_360_solicitud_state == 'pending' and 
-			if solicitud_pago and solicitud_pago['state'] == 'paid':
+			if solicitud_pago and 'state' in solicitud_pago and solicitud_pago['state'] == 'paid' and self.pagos_360_solicitud_state in ('draft', 'pending'):
 				if self.cuota_id.state in ('cobrada', 'precancelada', 'cobrada_con_reintegro'):
 					self.pagos_360_cobro_duplicado = True
 				request_result = solicitud_pago['request_result'][0]
@@ -201,7 +202,7 @@ class FinancieraPagos360Solicitud(models.Model):
 					self.pagos_360_payment_id.cancel()
 				self.cuota_id.pagos_360_cobrar_y_facturar(payment_date, journal_id, factura_electronica, amount, datetime.now(), payment_date, self)
 				pagos_360_id.actualizar_saldo()
-			self.pagos_360_solicitud_state = solicitud_pago['state']
+				self.pagos_360_solicitud_state = solicitud_pago['state']
 
 
 	def _procesar_respuesta(self, data):

@@ -5,16 +5,10 @@ from datetime import datetime, timedelta
 from openerp.exceptions import UserError, ValidationError
 import httplib
 import json
-import logging
-import base64
-import xlrd
-import tempfile
-import binascii
-import StringIO
-_logger = logging.getLogger(__name__)
 
+PAGOS360_ENDPOINT = "api.pagos360.com"
+ENDPOINT_CONSULTAR_COBROS = "/report/collection/"
 WEBHOOK_DIR = "https://cloudlibrasoft.com/financiera.pagos.360/webhook"
-COLUMNA_ID_SOLICITUD = "ID Solicitud"
 
 class FinancieraPagos360Cuenta(models.Model):
 	_name = 'financiera.pagos.360.cuenta'
@@ -27,13 +21,9 @@ class FinancieraPagos360Cuenta(models.Model):
 
 	journal_id = fields.Many2one('account.journal', 'Diario de Cobro', domain="[('type', 'in', ('cash', 'bank'))]")
 	factura_electronica = fields.Boolean('Factura electronica')
-	cobros_archivo = fields.Binary('Archivo de cobros')
-	cobros_contabilizados = fields.Integer('Cobros contabilizados')
-	cobros_no_encontrados = fields.Text('Cobros no encontrados')
 	set_default_payment = fields.Boolean("Marcar como medio de pago por defecto")
-	expire_create_new = fields.Boolean("Crear nueva Solicitud de Pago al expirar")
+	cobros_days_check = fields.Integer('Dias para chequear cobros', default=7)
 	expire_days_payment = fields.Integer("Dias para pagar la nueva Solicitud de Pago", default=1)
-	expire_max_count_create = fields.Integer("Numero de renovaciones")
 	email_template_id = fields.Many2one('mail.template', 'Plantilla de cuponera')
 	email_template_renovacion_cuota_id = fields.Many2one('mail.template', 'Plantilla de renovacion cuota')
 	report_name = fields.Char('Pdf adjunto en email')
@@ -49,39 +39,61 @@ class FinancieraPagos360Cuenta(models.Model):
 		self.unavailable_balance = responseObject['unavailable_balance']
 
 	@api.one
-	def actualizar_cobros(self):
-		self.cobros_contabilizados = 0
-		self.cobros_no_encontrados = ""
-		cobros_no_encontrados = ""
-		if self.cobros_archivo == None:
-			raise ValidationError('El archivo resultado no fue cargado')
-		# open file cobros_archivos whit xlrd
-		f = StringIO.StringIO(base64.b64decode(self.cobros_archivo))
-		book = xlrd.open_workbook(file_contents=f.getvalue(), ignore_workbook_corruption=True)
-		sheet = book.sheet_by_index(0)
-		col_id_solicitud = -1
-		j = 0
-		while j < sheet.ncols:
-			if sheet.cell(0, j).value == COLUMNA_ID_SOLICITUD:
-				col_id_solicitud = j
-				break
-			j += 1
-		if col_id_solicitud == -1:
-			raise ValidationError('No se encontro la columna: ' + COLUMNA_ID_SOLICITUD)
-		i = 1
-		for row in range(1, sheet.nrows):
-			id_solicitud = str(sheet.cell(row, col_id_solicitud).value).split(".")[0]
-			_id = self.env['financiera.pagos360.solicitud'].search([('pagos_360_solicitud_id', '=', id_solicitud)])
-			if _id:
-				solicitud_id = self.env['financiera.pagos360.solicitud'].browse(_id.id)
-				if solicitud_id.pagos_360_solicitud_state == 'pending':
-					solicitud_id.actualizar_solicitud()
-					self.cobros_contabilizados += 1
-			else:
-				# hacer i modulo 6 para que se vea bonito en el html
-				if i % 6 == 0:
-					cobros_no_encontrados += str(id_solicitud) + ", <br>"
-				else:
-					cobros_no_encontrados += str(id_solicitud) + ", "
-			i += 1
-		self.cobros_no_encontrados = cobros_no_encontrados
+	def check_cobros(self):
+		conn = httplib.HTTPSConnection(PAGOS360_ENDPOINT)
+		headers = {
+			'authorization': "Bearer " + self.api_key,
+			'Content-Type': "application/json"
+		}
+		for day in range(1, self.cobros_days_check):
+			date = (datetime.now() - timedelta(hours=(day*24)-3)).date() #-3 porque el servidor esta en EEUU
+			date = date.strftime('%d-%m-%Y')
+			print("URL: ",  ENDPOINT_CONSULTAR_COBROS + date)
+			conn.request("GET", ENDPOINT_CONSULTAR_COBROS + date, headers=headers)
+			res = conn.getresponse()
+			print("res: ", res)
+			print("res.status: ", res.status)
+			responseObject = json.loads(res.read())
+			print("responseObject: ", responseObject)
+			if 'data' in responseObject:
+				for cobro in responseObject['data']:
+					print("informed_date: " + cobro['informed_date'])
+					print("request_id: " + cobro['request_id'])
+					print("external_reference: " + cobro['external_reference'])
+					print("payer_name: " + cobro['payer_name'])
+					print("description: " + cobro['description'])
+					print("payment_date: " + cobro['payment_date'])
+					print("channel: " + cobro['channel'])
+					print("amount_paid: " + str(cobro['amount_paid']))
+					print("net_fee: " + str(cobro['net_fee']))
+					print("iva_fee: " + str(cobro['iva_fee']))
+					print("net_amount: " + str(cobro['net_amount']))
+					print("available_at: " + cobro['available_at'])
+					print("=====================================")
+					solicitud_ids = self.env['financiera.pagos360.solicitud'].search([
+						('pagos_360_solicitud_id', '=', cobro['request_id']),
+					])
+					if not solicitud_ids:
+						# creamos la solicitud que deberia haber existido
+						print("No existe la solicitud, la creamos")
+						id_cuota = False
+						if cobro['external_reference']:
+							id_cuota = cobro['external_reference']
+						solicitud_id = self.env['financiera.pagos360.solicitud'].create({
+							'pagos_360_solicitud_id': cobro['request_id'],
+							'cuota_id': id_cuota,
+							'pagos_360_solicitud_state': 'pending',
+							'payer_name': cobro['payer_name'],
+							'company_id': self.company_id.id,
+						})
+						# Si esta asignada a una cuota actualizamos la solicitud
+						# sino queda creada para asginarla de forma manual
+						if id_cuota:
+							solicitud_id.actualizar_solicitud()
+					else:
+						solicitud_id = solicitud_ids[0]
+						if solicitud_id.pagos_360_solicitud_state == 'pending':
+							print("La solicitud esta pendiente, actualizamos")
+							solicitud_id.actualizar_solicitud()
+						elif solicitud_id.pagos_360_solicitud_state == 'paid':
+							print("La solicitud ya esta pagada")
