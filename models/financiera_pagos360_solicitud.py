@@ -116,11 +116,13 @@ class FinancieraPagos360Solicitud(models.Model):
 		pagos_360_id = self.cuota_id.company_id.pagos_360_id
 		# primer vencimiento
 		fecha_vencimiento = datetime.strptime(self.cuota_id.fecha_vencimiento, "%Y-%m-%d")
+		flag_renovacion = False
 		if fecha_vencimiento < datetime.now():
 			if pagos_360_id.expire_days_payment <= 0:
 				raise ValidationError("En configuracion de Pagos360 defina Dias para pagar la nueva Solicitud de Pago mayor que 0.")
 			else:
 				fecha_vencimiento = datetime.now() + timedelta(days=+pagos_360_id.expire_days_payment)
+				flag_renovacion = True
 		fecha_vencimiento = str(fecha_vencimiento.day).zfill(2)+"-"+str(fecha_vencimiento.month).zfill(2)+"-"+str(fecha_vencimiento.year)
 		payload = {
 			'payment_request': {
@@ -132,12 +134,13 @@ class FinancieraPagos360Solicitud(models.Model):
 			}
 		}
 		# segundo vencimiento
-		if self.cuota_id.segunda_fecha_vencimiento:
-			segunda_fecha_vencimiento = datetime.strptime(self.cuota_id.segunda_fecha_vencimiento, "%Y-%m-%d")
-			if segunda_fecha_vencimiento >= datetime.now() and self.cuota_id.total_segunda_fecha >= self.cuota_id.saldo:
-				segunda_fecha_vencimiento = str(segunda_fecha_vencimiento.day).zfill(2)+"-"+str(segunda_fecha_vencimiento.month).zfill(2)+"-"+str(segunda_fecha_vencimiento.year)
-				payload['payment_request']['second_due_date'] = segunda_fecha_vencimiento
-				payload['payment_request']['second_total'] = self.cuota_id.total_segunda_fecha
+		if not flag_renovacion:
+			if self.cuota_id.segunda_fecha_vencimiento:
+				segunda_fecha_vencimiento = datetime.strptime(self.cuota_id.segunda_fecha_vencimiento, "%Y-%m-%d")
+				if segunda_fecha_vencimiento >= datetime.now() and self.cuota_id.total_segunda_fecha >= self.cuota_id.saldo:
+					segunda_fecha_vencimiento = str(segunda_fecha_vencimiento.day).zfill(2)+"-"+str(segunda_fecha_vencimiento.month).zfill(2)+"-"+str(segunda_fecha_vencimiento.year)
+					payload['payment_request']['second_due_date'] = segunda_fecha_vencimiento
+					payload['payment_request']['second_total'] = self.cuota_id.total_segunda_fecha
 		self.cuota_id.pagos_360_generar_pago_voluntario = True
 		headers = {
 			'content-type': "application/json",

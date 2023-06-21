@@ -22,7 +22,7 @@
 					<field name="pagos_360_payment_id" readonly="1" />
 					<field name="pagos_360_solicitud_state" readonly="1" />
 					<field name="cuota_state" readonly="1" />
-					<button name="actualizar_solicitud" string="Actualizar" attrs="{'invisible': [('cuota_state','in', ['cotizacion','precancelada','cobrada','cobrada_con_reintegro','refinanciada'])]}" type="object" class="oe_highlight" />
+					<button name="actualizar_solicitud" string="Actualizar" type="object" class="oe_highlight" />
 					<field name="company_id" groups="base.group_erp_manager" />
 				</tree>
 			</field>
@@ -34,11 +34,11 @@
 			<field name="arch" type="xml">
 				<form>
 					<header>
-						<field name="pagos_360_solicitud_state" widget="statusbar" readonly="1" />
+						<field name="pagos_360_solicitud_state" widget="statusbar" clickable="1" />
 					</header>
 					<header>
 						<button name="generar_solicitud" string="Generar solicitud" attrs="{'invisible': [('pagos_360_solicitud_state','!=', 'draft')]}" type="object" class="oe_highlight" />
-						<button name="actualizar_solicitud" string="Actualizar" attrs="{'invisible': [('cuota_state','in', ['cotizacion','precancelada','cobrada','cobrada_con_reintegro','refinanciada'])]}" type="object" class="oe_highlight" />
+						<button name="actualizar_solicitud" string="Actualizar" type="object" class="oe_highlight" />
 						<button name="marcar_resuelto_cobro_duplicado" string="Marcar resuelto el Cobro duplicado" attrs="{'invisible': [('pagos_360_cobro_duplicado','=', False)]}" type="object" class="oe_highlight" />
 					</header>
 					<sheet>
